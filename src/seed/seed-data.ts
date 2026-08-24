@@ -1,0 +1,651 @@
+// Seed data for Week 2 — Manchester venues, tags, offers, mock data
+
+import { VenueCategory } from '../common/enums/venue-category.enum';
+import { BusynessLevel } from '../common/enums/busyness-level.enum';
+import { OfferType } from '../common/enums/offer-type.enum';
+import { NotificationType } from '../common/enums/notification-type.enum';
+import { BusinessRole } from '../common/enums/business-role.enum';
+
+// ─── TAGS ──────────────────────────────────────────────────
+export const VIBE_TAGS = [
+  'Chill', 'Party', 'Romantic', 'High Energy', 'Intimate',
+  'Industrial', 'Rooftop', 'Underground', 'Late Night',
+  'Hidden Entrance', 'Date Night', 'Beer Garden', 'Packed', 'Live Music',
+];
+export const MUSIC_TAGS = ['House', 'R&B', 'Indie', 'Lo-fi', 'Techno', 'Vinyl'];
+
+// ─── 15 MANCHESTER VENUES ─────────────────────────────────
+export const MANCHESTER_VENUES = [
+  {
+    name: "Albert's Schloss",
+    address: '27 Peter Street',
+    city: 'Manchester',
+    area: 'Peter Street',
+    category: VenueCategory.BAR,
+    lat: 53.4745,
+    lng: -2.2489,
+    images: [
+      'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1485686531765-ba63b07845a7?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 2,
+    openingHours: '12:00',
+    closingTime: '02:00',
+    isLive: false,
+    tags: ['Beer Garden', 'Live Music', 'Party'],
+    rating: 4.7,
+  },
+  {
+    name: 'Warehouse Project',
+    address: 'Mayfield Depot, London Road',
+    city: 'Manchester',
+    area: 'Mayfield Depot',
+    category: VenueCategory.CLUB,
+    lat: 53.4700,
+    lng: -2.2365,
+    images: [
+      'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1598387846148-47e82ee120cc?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 3,
+    openingHours: '22:00',
+    closingTime: '05:00',
+    isLive: false,
+    tags: ['Underground', 'High Energy', 'Packed'],
+    rating: 4.9,
+  },
+  {
+    name: '20 Stories',
+    address: '1 Hardman Square, Spinningfields',
+    city: 'Manchester',
+    area: 'Spinningfields',
+    category: VenueCategory.ROOFTOP_BAR,
+    lat: 53.4798,
+    lng: -2.2507,
+    images: [
+      'https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 4,
+    openingHours: '12:00',
+    closingTime: '01:00',
+    isLive: false,
+    tags: ['Rooftop', 'Romantic', 'Date Night'],
+    rating: 4.8,
+  },
+  {
+    name: 'The Alchemist',
+    address: '1 New York Street, Spinningfields',
+    city: 'Manchester',
+    area: 'Spinningfields',
+    category: VenueCategory.COCKTAIL_BAR,
+    lat: 53.4802,
+    lng: -2.2510,
+    images: [
+      'https://images.unsplash.com/photo-1470338745628-171cf53de3a8?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1536935338788-846bb9981813?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 3,
+    openingHours: '10:00',
+    closingTime: '01:00',
+    isLive: false,
+    tags: ['Intimate', 'Date Night', 'Chill'],
+    rating: 4.6,
+  },
+  {
+    name: 'Albert Hall',
+    address: '27 Peter Street',
+    city: 'Manchester',
+    area: 'Peter Street',
+    category: VenueCategory.LIVE_MUSIC_VENUE,
+    lat: 53.4744,
+    lng: -2.2490,
+    images: [
+      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 2,
+    openingHours: '19:00',
+    closingTime: '03:00',
+    isLive: false,
+    tags: ['Live Music', 'High Energy', 'Industrial'],
+    rating: 4.8,
+  },
+  {
+    name: 'YES Manchester',
+    address: '38 Charles Street',
+    city: 'Manchester',
+    area: 'Charles Street',
+    category: VenueCategory.LIVE_MUSIC_VENUE,
+    lat: 53.4740,
+    lng: -2.2430,
+    images: [
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1508854710579-5cecc3a9ff17?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1485579149621-3123dd979885?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 2,
+    openingHours: '12:00',
+    closingTime: '03:00',
+    isLive: false,
+    tags: ['Live Music', 'Underground', 'Intimate'],
+    rating: 4.5,
+  },
+  {
+    name: 'Diecast',
+    address: '8 Great Ancoats Street',
+    city: 'Manchester',
+    area: 'Ancoats',
+    category: VenueCategory.BAR,
+    lat: 53.4840,
+    lng: -2.2320,
+    images: [
+      'https://images.unsplash.com/photo-1525268323446-0505b6fe7778?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 2,
+    openingHours: '16:00',
+    closingTime: '01:00',
+    isLive: false,
+    tags: ['Industrial', 'Chill', 'Beer Garden'],
+    rating: 4.4,
+  },
+  {
+    name: 'Refuge',
+    address: 'Oxford Street',
+    city: 'Manchester',
+    area: 'Oxford Road',
+    category: VenueCategory.RESTAURANT,
+    lat: 53.4730,
+    lng: -2.2410,
+    images: [
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 3,
+    openingHours: '08:00',
+    closingTime: '01:00',
+    isLive: false,
+    tags: ['Romantic', 'Chill', 'Date Night'],
+    rating: 4.6,
+  },
+  {
+    name: 'Cloud 23',
+    address: 'Beetham Tower, 303 Deansgate',
+    city: 'Manchester',
+    area: 'Deansgate',
+    category: VenueCategory.ROOFTOP_BAR,
+    lat: 53.4740,
+    lng: -2.2500,
+    images: [
+      'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1570521462033-3015e76e7432?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 4,
+    openingHours: '12:00',
+    closingTime: '01:00',
+    isLive: false,
+    tags: ['Rooftop', 'Romantic', 'Intimate'],
+    rating: 4.7,
+  },
+  {
+    name: 'Night & Day Café',
+    address: '26 Oldham Street',
+    city: 'Manchester',
+    area: 'Northern Quarter',
+    category: VenueCategory.BAR,
+    lat: 53.4835,
+    lng: -2.2355,
+    images: [
+      'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 1,
+    openingHours: '11:00',
+    closingTime: '02:00',
+    isLive: false,
+    tags: ['Live Music', 'Underground', 'Late Night'],
+    rating: 4.5,
+  },
+  {
+    name: 'Science & Industry',
+    address: 'Liverpool Road',
+    city: 'Manchester',
+    area: 'Castlefield',
+    category: VenueCategory.CLUB,
+    lat: 53.4770,
+    lng: -2.2555,
+    images: [
+      'https://images.unsplash.com/photo-1574391884720-bbc3740c59d1?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1504680177321-2e6a879aac86?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 2,
+    openingHours: '22:00',
+    closingTime: '04:00',
+    isLive: false,
+    tags: ['Party', 'High Energy', 'Packed'],
+    rating: 4.3,
+  },
+  {
+    name: 'Gorilla',
+    address: '54-56 Whitworth Street',
+    city: 'Manchester',
+    area: 'Whitworth Street',
+    category: VenueCategory.LIVE_MUSIC_VENUE,
+    lat: 53.4737,
+    lng: -2.2425,
+    images: [
+      'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 2,
+    openingHours: '16:00',
+    closingTime: '03:00',
+    isLive: false,
+    tags: ['Live Music', 'Party', 'Late Night'],
+    rating: 4.6,
+  },
+  {
+    name: 'The Ivy',
+    address: 'The Pavilion, Spinningfields Square',
+    city: 'Manchester',
+    area: 'Spinningfields',
+    category: VenueCategory.RESTAURANT,
+    lat: 53.4800,
+    lng: -2.2520,
+    images: [
+      'https://images.unsplash.com/photo-1559329007-40df8a9345d8?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1592861956120-e524fc739696?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 4,
+    openingHours: '10:00',
+    closingTime: '00:00',
+    isLive: false,
+    tags: ['Romantic', 'Date Night', 'Chill'],
+    rating: 4.5,
+  },
+  {
+    name: 'Peveril of the Peak',
+    address: '127 Great Bridgewater Street',
+    city: 'Manchester',
+    area: 'Great Bridgewater Street',
+    category: VenueCategory.PUB,
+    lat: 53.4738,
+    lng: -2.2465,
+    images: [
+      'https://images.unsplash.com/photo-1565699894576-1710004524ba?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1546726747-421c6d69c929?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 1,
+    openingHours: '12:00',
+    closingTime: '23:00',
+    isLive: false,
+    tags: ['Chill', 'Beer Garden', 'Intimate'],
+    rating: 4.3,
+  },
+  {
+    name: 'Electrik',
+    address: '559 Wilmslow Road',
+    city: 'Manchester',
+    area: 'Didsbury',
+    category: VenueCategory.BAR,
+    lat: 53.4250,
+    lng: -2.2270,
+    images: [
+      'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?w=800&h=600&fit=crop',
+      'https://images.unsplash.com/photo-1560840067-ddcaeb7831d2?w=800&h=600&fit=crop',
+    ],
+    priceLevel: 1,
+    openingHours: '12:00',
+    closingTime: '01:00',
+    isLive: false,
+    tags: ['Chill', 'Beer Garden', 'Late Night'],
+    rating: 4.4,
+  },
+];
+
+// ─── BUSYNESS DATA (per venue, by index) ──────────────────
+export const VENUE_BUSYNESS = [
+  { level: BusynessLevel.BUSY, percentage: 88 },        // Albert's Schloss
+  { level: BusynessLevel.BUSY, percentage: 92 },        // Warehouse Project
+  { level: BusynessLevel.MODERATE, percentage: 55 },    // 20 Stories
+  { level: BusynessLevel.MODERATE, percentage: 60 },    // The Alchemist
+  { level: BusynessLevel.BUSY, percentage: 78 },        // Albert Hall
+  { level: BusynessLevel.MODERATE, percentage: 45 },    // YES Manchester
+  { level: BusynessLevel.QUIET, percentage: 20 },       // Diecast
+  { level: BusynessLevel.MODERATE, percentage: 50 },    // Refuge
+  { level: BusynessLevel.MODERATE, percentage: 58 },    // Cloud 23
+  { level: BusynessLevel.QUIET, percentage: 30 },       // Night & Day Café
+  { level: BusynessLevel.BUSY, percentage: 80 },        // Science & Industry
+  { level: BusynessLevel.MODERATE, percentage: 65 },    // Gorilla
+  { level: BusynessLevel.QUIET, percentage: 28 },       // The Ivy
+  { level: BusynessLevel.QUIET, percentage: 15 },       // Peveril of the Peak
+  { level: BusynessLevel.QUIET, percentage: 22 },       // Electrik
+];
+
+// ─── VIBE DATA (per venue, by index) ──────────────────────
+export const VENUE_VIBES = [
+  { tags: ['Party', 'Live Music', 'Beer Garden'], musicGenre: ['House', 'R&B'], description: 'Bavarian bierhaus with live music and cabaret', vibeCheckScore: 4.8, responseCount: 142 },
+  { tags: ['High Energy', 'Underground', 'Packed'], musicGenre: ['Techno', 'House'], description: 'Iconic underground warehouse club experience', vibeCheckScore: 4.9, responseCount: 320 },
+  { tags: ['Rooftop', 'Romantic', 'Date Night'], musicGenre: ['Lo-fi', 'R&B'], description: 'Stunning rooftop views over Manchester skyline', vibeCheckScore: 4.7, responseCount: 98 },
+  { tags: ['Intimate', 'Date Night', 'Chill'], musicGenre: ['Lo-fi', 'Indie'], description: 'Theatrical cocktail bar with a mysterious vibe', vibeCheckScore: 4.5, responseCount: 112 },
+  { tags: ['Live Music', 'High Energy', 'Industrial'], musicGenre: ['Indie', 'R&B'], description: 'Former chapel turned legendary live music venue', vibeCheckScore: 4.8, responseCount: 205 },
+  { tags: ['Live Music', 'Underground', 'Intimate'], musicGenre: ['Indie', 'Vinyl'], description: 'Multi-floor indie playground with rooftop pizza', vibeCheckScore: 4.4, responseCount: 87 },
+  { tags: ['Industrial', 'Chill', 'Beer Garden'], musicGenre: ['Techno', 'House'], description: 'Industrial-chic bar in trendy Ancoats', vibeCheckScore: 4.3, responseCount: 56 },
+  { tags: ['Romantic', 'Chill', 'Date Night'], musicGenre: ['Lo-fi', 'Vinyl'], description: 'Grand cafe bar in The Principal hotel', vibeCheckScore: 4.5, responseCount: 74 },
+  { tags: ['Rooftop', 'Romantic', 'Intimate'], musicGenre: ['Lo-fi', 'R&B'], description: 'Sky-high cocktails at Beetham Tower', vibeCheckScore: 4.6, responseCount: 91 },
+  { tags: ['Live Music', 'Underground', 'Late Night'], musicGenre: ['Indie', 'Vinyl'], description: 'Northern Quarter institution for live gigs', vibeCheckScore: 4.5, responseCount: 168 },
+  { tags: ['Party', 'High Energy', 'Packed'], musicGenre: ['House', 'Techno'], description: 'Late-night club in Castlefield vaults', vibeCheckScore: 4.2, responseCount: 134 },
+  { tags: ['Live Music', 'Party', 'Late Night'], musicGenre: ['Indie', 'R&B'], description: 'Intimate gig venue under the railway arches', vibeCheckScore: 4.5, responseCount: 145 },
+  { tags: ['Romantic', 'Date Night', 'Chill'], musicGenre: ['Lo-fi'], description: 'Elegant fine dining in Spinningfields', vibeCheckScore: 4.4, responseCount: 63 },
+  { tags: ['Chill', 'Beer Garden', 'Intimate'], musicGenre: ['Indie', 'Vinyl'], description: 'Iconic tiled pub, Manchester heritage gem', vibeCheckScore: 4.2, responseCount: 48 },
+  { tags: ['Chill', 'Beer Garden', 'Late Night'], musicGenre: ['House', 'Indie'], description: 'Laid-back Didsbury bar with great beer garden', vibeCheckScore: 4.3, responseCount: 72 },
+];
+
+// ─── MOCK OFFERS (all 15 venues) ─────────────────────────
+export const MOCK_OFFERS = [
+  {
+    venueIndex: 0, // Albert's Schloss
+    title: 'Happy Hour 2-for-1',
+    description: 'Buy one get one free on all draught beers during happy hour',
+    type: OfferType.TWO_FOR_ONE,
+    validDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    validTimeStart: '17:00',
+    validTimeEnd: '19:00',
+    isActive: true,
+    maxRedemptions: 100,
+    savingValue: 5.50,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 3, // The Alchemist
+    title: 'Buy 1 Get 1 Free Cocktails',
+    description: 'Two-for-one on signature cocktails all day',
+    type: OfferType.TWO_FOR_ONE,
+    validDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    validTimeStart: '12:00',
+    validTimeEnd: '23:00',
+    isActive: true,
+    maxRedemptions: 200,
+    savingValue: 9.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 2, // 20 Stories
+    title: 'Complimentary Signature Cocktail',
+    description: 'Free signature cocktail with any main course order',
+    type: OfferType.FREEBIE,
+    validDays: ['Fri', 'Sat'],
+    validTimeStart: '20:00',
+    validTimeEnd: '22:00',
+    isActive: true,
+    maxRedemptions: 50,
+    savingValue: 12.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 1, // Warehouse Project
+    title: 'Guestlist Open Now',
+    description: 'Skip the queue — guaranteed entry before midnight',
+    type: OfferType.GUESTLIST,
+    validDays: ['Fri', 'Sat'],
+    validTimeStart: '22:00',
+    validTimeEnd: '02:00',
+    isActive: true,
+    maxRedemptions: 150,
+    savingValue: 15.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 4, // Albert Hall
+    title: 'Student Night Discount',
+    description: '20% off all drinks on student Wednesdays',
+    type: OfferType.DISCOUNT,
+    validDays: ['Wed'],
+    validTimeStart: '19:00',
+    validTimeEnd: '03:00',
+    isActive: true,
+    maxRedemptions: 300,
+    savingValue: 4.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 5, // YES Manchester
+    title: 'Free Entry Before 10 PM',
+    description: 'No cover charge if you arrive before 10 PM on event nights',
+    type: OfferType.FREEBIE,
+    validDays: ['Fri', 'Sat'],
+    validTimeStart: '19:00',
+    validTimeEnd: '22:00',
+    isActive: true,
+    maxRedemptions: 100,
+    savingValue: 8.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 6, // Diecast
+    title: 'Craft Beer Flight Deal',
+    description: 'Try 4 craft beers for the price of 3',
+    type: OfferType.DISCOUNT,
+    validDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    validTimeStart: '16:00',
+    validTimeEnd: '20:00',
+    isActive: true,
+    maxRedemptions: 80,
+    savingValue: 4.50,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 7, // Refuge
+    title: 'Sunday Brunch 2-for-1 Mimosas',
+    description: 'Bottomless mimosas with any brunch dish',
+    type: OfferType.TWO_FOR_ONE,
+    validDays: ['Sun'],
+    validTimeStart: '10:00',
+    validTimeEnd: '15:00',
+    isActive: true,
+    maxRedemptions: 60,
+    savingValue: 7.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 8, // Cloud 23
+    title: 'Golden Hour Cocktail',
+    description: 'Complimentary golden hour cocktail with rooftop table booking',
+    type: OfferType.FREEBIE,
+    validDays: ['Thu', 'Fri', 'Sat'],
+    validTimeStart: '17:00',
+    validTimeEnd: '19:00',
+    isActive: true,
+    maxRedemptions: 40,
+    savingValue: 14.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 9, // Night & Day Café
+    title: 'Live Gig Discount',
+    description: '£2 off any pint during live performances',
+    type: OfferType.DISCOUNT,
+    validDays: ['Wed', 'Thu', 'Fri', 'Sat'],
+    validTimeStart: '20:00',
+    validTimeEnd: '01:00',
+    isActive: true,
+    maxRedemptions: 120,
+    savingValue: 2.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 10, // Science & Industry
+    title: 'Early Bird Guestlist',
+    description: 'Free entry + complimentary shot before midnight',
+    type: OfferType.GUESTLIST,
+    validDays: ['Fri', 'Sat'],
+    validTimeStart: '22:00',
+    validTimeEnd: '00:00',
+    isActive: true,
+    maxRedemptions: 100,
+    savingValue: 10.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 11, // Gorilla
+    title: '2-for-1 Pre-Gig Drinks',
+    description: 'Buy one get one free on selected drinks before any show',
+    type: OfferType.TWO_FOR_ONE,
+    validDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    validTimeStart: '16:00',
+    validTimeEnd: '19:00',
+    isActive: true,
+    maxRedemptions: 80,
+    savingValue: 5.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 12, // The Ivy
+    title: 'Afternoon Tea Special',
+    description: '15% off afternoon tea for two',
+    type: OfferType.DISCOUNT,
+    validDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    validTimeStart: '14:00',
+    validTimeEnd: '17:00',
+    isActive: true,
+    maxRedemptions: 50,
+    savingValue: 8.50,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 13, // Peveril of the Peak
+    title: 'Sunday Roast & Pint Combo',
+    description: 'Traditional roast dinner with a free pint of cask ale',
+    type: OfferType.FREEBIE,
+    validDays: ['Sun'],
+    validTimeStart: '12:00',
+    validTimeEnd: '16:00',
+    isActive: true,
+    maxRedemptions: 40,
+    savingValue: 5.50,
+    expiresAt: new Date('2026-12-31'),
+  },
+  {
+    venueIndex: 14, // Electrik
+    title: 'Happy Hour All Night Monday',
+    description: '£1 off all pints every Monday evening',
+    type: OfferType.DISCOUNT,
+    validDays: ['Mon'],
+    validTimeStart: '17:00',
+    validTimeEnd: '23:00',
+    isActive: true,
+    maxRedemptions: 100,
+    savingValue: 3.00,
+    expiresAt: new Date('2026-12-31'),
+  },
+];
+
+// ─── MOCK NOTIFICATIONS ──────────────────────────────────
+export const MOCK_NOTIFICATIONS = [
+  {
+    type: NotificationType.WELCOME,
+    title: 'Welcome to REKI! 🎉',
+    message: 'Start exploring Manchester\'s best nightlife spots.',
+    icon: '🎉',
+  },
+  {
+    type: NotificationType.VIBE_ALERT,
+    title: "Albert's Schloss is buzzing!",
+    message: 'Live music tonight — busyness at 88%. Head down before it gets packed.',
+    icon: '🔥',
+    venueIndex: 0,
+  },
+  {
+    type: NotificationType.LIVE_PERFORMANCE,
+    title: 'Live DJ at Warehouse Project',
+    message: 'Special guest set starting at 11PM tonight.',
+    icon: '🎵',
+    venueIndex: 1,
+  },
+  {
+    type: NotificationType.OFFER_CONFIRMATION,
+    title: 'Offer Claimed!',
+    message: 'Your Happy Hour 2-for-1 at Albert\'s Schloss is ready to use.',
+    icon: '🎟️',
+    venueIndex: 0,
+  },
+  {
+    type: NotificationType.SOCIAL_CHECKIN,
+    title: '3 friends are at 20 Stories',
+    message: 'Sarah, Mike, and Emma just checked in nearby.',
+    icon: '👥',
+    venueIndex: 2,
+  },
+  {
+    type: NotificationType.WEEKLY_RECAP,
+    title: 'Your Manchester Week 📊',
+    message: 'You visited 4 venues and saved £23.50 with REKI offers this week.',
+    icon: '📊',
+  },
+  {
+    type: NotificationType.VIBE_ALERT,
+    title: 'Cloud 23 — Sunset vibes right now',
+    message: 'Rooftop bar just went live with golden hour cocktails.',
+    icon: '🌅',
+    venueIndex: 8,
+  },
+  {
+    type: NotificationType.TICKET_SECURED,
+    title: 'Guestlist Confirmed! 🎫',
+    message: 'You\'re on the list at Warehouse Project this Saturday.',
+    icon: '🎫',
+    venueIndex: 1,
+  },
+];
+
+// ─── MOCK VENUE ANALYTICS ─────────────────────────────────
+export const MOCK_ANALYTICS = [
+  { venueIndex: 0, liveBusynessPercent: 88, busynessChange: '↑12%', avgDwellTime: 54, dwellTimeChange: '↑8m', vibeCheckScore: 4.8, vibeCheckResponses: 142, socialShares: 128, socialSharesChange: '↑15%', totalViews: 1250, totalSaves: 340, offerClicks: 89, redemptions: 42 },
+  { venueIndex: 1, liveBusynessPercent: 92, busynessChange: '↑5%', avgDwellTime: 120, dwellTimeChange: '↑15m', vibeCheckScore: 4.9, vibeCheckResponses: 320, socialShares: 245, socialSharesChange: '↑22%', totalViews: 3200, totalSaves: 890, offerClicks: 156, redemptions: 78 },
+  { venueIndex: 2, liveBusynessPercent: 55, busynessChange: '↓3%', avgDwellTime: 68, dwellTimeChange: '→', vibeCheckScore: 4.7, vibeCheckResponses: 98, socialShares: 95, socialSharesChange: '↑8%', totalViews: 980, totalSaves: 420, offerClicks: 67, redemptions: 31 },
+  { venueIndex: 3, liveBusynessPercent: 60, busynessChange: '↑7%', avgDwellTime: 45, dwellTimeChange: '↓5m', vibeCheckScore: 4.5, vibeCheckResponses: 112, socialShares: 78, socialSharesChange: '↑3%', totalViews: 870, totalSaves: 290, offerClicks: 54, redemptions: 23 },
+  { venueIndex: 4, liveBusynessPercent: 78, busynessChange: '↑10%', avgDwellTime: 90, dwellTimeChange: '↑12m', vibeCheckScore: 4.8, vibeCheckResponses: 205, socialShares: 167, socialSharesChange: '↑18%', totalViews: 1560, totalSaves: 520, offerClicks: 98, redemptions: 55 },
+];
+
+// ─── BUSINESS USERS (Week 4) ─────────────────────────────
+export const MOCK_BUSINESS_USERS = [
+  {
+    venueIndex: 0, // Albert's Schloss
+    email: 'manager@alberts.com',
+    name: 'John Smith',
+    password: 'business123',
+    role: BusinessRole.OWNER,
+    phone: '+447111222333',
+  },
+  {
+    venueIndex: 1, // Warehouse Project
+    email: 'manager@warehouse.com',
+    name: 'Sarah Connor',
+    password: 'business123',
+    role: BusinessRole.OWNER,
+    phone: '+447222333444',
+  },
+  {
+    venueIndex: 3, // The Alchemist
+    email: 'manager@alchemist.com',
+    name: 'Mike Taylor',
+    password: 'business123',
+    role: BusinessRole.MANAGER,
+    phone: '+447333444555',
+  },
+];
