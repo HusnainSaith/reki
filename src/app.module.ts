@@ -29,13 +29,16 @@ import { SyncModule } from './modules/sync/sync.module';
 import { CronModule } from './modules/cron/cron.module';
 import { SeedModule } from './seed/seed.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { EngagementModule } from './modules/engagement/engagement.module';
 
 @Module({
   imports: [
     // Config
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      // Local development keeps the environment file under src, while
+      // deployments may provide one at the project root.
+      envFilePath: ['.env', 'src/.env'],
       load: [appConfig, databaseConfig],
     }),
 
@@ -86,6 +89,7 @@ import { UploadModule } from './modules/upload/upload.module';
     CronModule,
     SeedModule,
     UploadModule,
+    EngagementModule,
   ],
   controllers: [AppController],
   providers: [

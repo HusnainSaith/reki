@@ -10,9 +10,11 @@ import { Offer } from '../offers/entities/offer.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { User } from '../users/entities/user.entity';
 import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
+import { EngagementModule } from '../engagement/engagement.module';
 
 @Module({
   imports: [
+    EngagementModule,
     TypeOrmModule.forFeature([
       SyncAction,
       Venue,

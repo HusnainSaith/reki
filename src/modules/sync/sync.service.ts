@@ -11,6 +11,7 @@ import { User } from '../users/entities/user.entity';
 import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 import { BusynessLevel, BusynessPercentageMap } from '../../common/enums';
 import { SyncActionDto } from './dto';
+import { EngagementService } from '../engagement/engagement.service';
 
 @Injectable()
 export class SyncService {
@@ -33,6 +34,7 @@ export class SyncService {
     private usersRepository: Repository<User>,
     @InjectRepository(VenueAnalytics)
     private analyticsRepository: Repository<VenueAnalytics>,
+    private engagementService: EngagementService,
   ) {}
 
   private async incrementAnalytic(venueId: string, field: 'totalSaves', delta: number): Promise<void> {
@@ -92,9 +94,28 @@ export class SyncService {
         return this.processVenueSave(userId, deviceId, action);
       case SyncActionType.VENUE_VIEW:
         return this.processVenueView(userId, deviceId, action);
+      case SyncActionType.REVIEW_CREATE:
+        return this.processEngagementAction(userId, deviceId, action, () => this.engagementService.createReview(userId, action.venueId!, action.data as any));
+      case SyncActionType.REVIEW_UPDATE:
+        return this.processEngagementAction(userId, deviceId, action, () => this.engagementService.updateReview(userId, action.data?.reviewId, action.data as any));
+      case SyncActionType.CHECK_IN:
+        return this.processEngagementAction(userId, deviceId, action, () => this.engagementService.checkIn(userId, action.venueId!, { ...(action.data as any), timestamp: action.offlineTimestamp }));
+      case SyncActionType.VIBE_ACCURACY_VOTE:
+        return this.processEngagementAction(userId, deviceId, action, () => this.engagementService.vote(userId, action.venueId!, { ...(action.data as any), votedAt: action.offlineTimestamp }));
+      case SyncActionType.VENUE_HISTORY_VIEW:
+        return this.processEngagementAction(userId, deviceId, action, () => this.engagementService.recordHistory(userId, action.venueId!, { ...(action.data as any), viewedAt: action.offlineTimestamp }));
+      case SyncActionType.VENUE_SHARE:
+        return this.processEngagementAction(userId, deviceId, action, () => this.engagementService.share(userId, action.venueId!, { ...(action.data as any), sharedAt: action.offlineTimestamp }));
       default:
         return { id: action.id, status: 'rejected', message: 'Unknown action type' };
     }
+  }
+
+  private async processEngagementAction(userId: string, deviceId: string, action: SyncActionDto, operation: () => Promise<any>) {
+    if (!action.venueId) return { id: action.id, status: 'rejected', message: 'venueId is required' };
+    const data = await operation();
+    await this.saveSyncAction(userId, deviceId, action, SyncActionStatus.SUCCESS);
+    return { id: action.id, status: 'success', data };
   }
 
   // ── BUSYNESS UPDATE (conflict possible) ──
