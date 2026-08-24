@@ -162,10 +162,8 @@ export class UsersController {
 
   @Delete('account')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(NoGuestGuard)
   @ApiOperation({ summary: 'Delete user account (GDPR — permanent)' })
   @ApiOkResponse({ description: 'Account deleted successfully' })
-  @ApiForbiddenResponse({ description: 'Guest users cannot delete accounts' })
   async deleteAccount(@CurrentUser() user: User) {
     return this.usersService.deleteAccount(user.id);
   }

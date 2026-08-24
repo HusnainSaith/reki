@@ -183,6 +183,12 @@ export class UsersService {
     await mgr.query(`DELETE FROM redemptions WHERE "userId" = $1`, [userId]);
     await mgr.query(`DELETE FROM devices WHERE "userId" = $1`, [userId]);
     await mgr.query(`DELETE FROM notification_preferences WHERE "userId" = $1`, [userId]);
+    await mgr.query(`DELETE FROM sync_actions WHERE "userId" = $1`, [userId]);
+    await mgr.query(`DELETE FROM venue_reviews WHERE "userId" = $1`, [userId]);
+    await mgr.query(`DELETE FROM vibe_accuracy_votes WHERE "userId" = $1`, [userId]);
+    await mgr.query(`DELETE FROM venue_check_ins WHERE "userId" = $1`, [userId]);
+    await mgr.query(`DELETE FROM venue_history WHERE "userId" = $1`, [userId]);
+    await mgr.query(`DELETE FROM venue_shares WHERE "userId" = $1`, [userId]);
 
     await this.usersRepository.remove(user);
 
