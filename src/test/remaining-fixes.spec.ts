@@ -10,6 +10,8 @@ import { RefreshToken } from '../modules/auth/entities/refresh-token.entity';
 import { Notification } from '../modules/notifications/entities/notification.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { VenueAnalytics } from '../modules/business/entities/venue-analytics.entity';
+import { NotificationsService } from '../modules/notifications/notifications.service';
 
 describe('Remaining Production Issues - Email & Apple Wallet', () => {
   let authService: AuthService;
@@ -48,6 +50,16 @@ describe('Remaining Production Issues - Email & Apple Wallet', () => {
     verify: jest.fn(),
   };
 
+  const mockAnalyticsRepository = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
+
+  const mockNotificationsService = {
+    createWelcomeNotification: jest.fn(),
+  };
+
   const mockConfigService = {
     get: jest.fn(),
   };
@@ -79,12 +91,20 @@ describe('Remaining Production Issues - Email & Apple Wallet', () => {
           useValue: mockNotificationRepository,
         },
         {
+          provide: getRepositoryToken(VenueAnalytics),
+          useValue: mockAnalyticsRepository,
+        },
+        {
           provide: JwtService,
           useValue: mockJwtService,
         },
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
         },
       ],
     }).compile();

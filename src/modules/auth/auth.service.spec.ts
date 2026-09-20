@@ -37,6 +37,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Role, AuthProvider } from '../../common/enums';
 import { EmailService } from '../email/email.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -46,6 +47,7 @@ describe('AuthService', () => {
   let jwtService: Record<string, jest.Mock>;
   let configService: Record<string, jest.Mock>;
   let emailService: Record<string, jest.Mock>;
+  let notificationsService: Record<string, jest.Mock>;
 
   const mockUser: Partial<User> = {
     id: 'user-1',
@@ -83,6 +85,10 @@ describe('AuthService', () => {
       sendPasswordResetEmail: jest.fn(),
       sendVerificationEmail: jest.fn(),
     };
+    notificationsService = {
+      createNotification: jest.fn(),
+      createWelcomeNotification: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -93,6 +99,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
         { provide: EmailService, useValue: emailService },
+        { provide: NotificationsService, useValue: notificationsService },
       ],
     }).compile();
 
@@ -142,7 +149,7 @@ describe('AuthService', () => {
       expect(result.user.email).toBe('test@reki.app');
       expect(result.tokens).toBeDefined();
       expect(usersRepo.save).toHaveBeenCalled();
-      expect(notificationsRepo.save).toHaveBeenCalled();
+      expect(notificationsService.createWelcomeNotification).toHaveBeenCalled();
     });
 
     it('should throw ConflictException if email exists', async () => {
@@ -204,7 +211,7 @@ describe('AuthService', () => {
 
       const result = await service.googleAuth('valid-id-token');
       expect(result.user.email).toBe('google@test.com');
-      expect(notificationsRepo.save).toHaveBeenCalled();
+      expect(notificationsService.createWelcomeNotification).toHaveBeenCalled();
     });
 
     it('should login existing Google user without creating welcome notif', async () => {

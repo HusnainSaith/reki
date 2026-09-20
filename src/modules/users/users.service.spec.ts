@@ -4,6 +4,7 @@ import { NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Redemption } from '../offers/entities/redemption.entity';
+import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -27,12 +28,18 @@ describe('UsersService', () => {
     redemptionsRepo = {
       find: jest.fn(),
     };
+    const analyticsRepo = {
+      findOne: jest.fn(),
+      create: jest.fn().mockImplementation((data) => ({ ...data })),
+      save: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: getRepositoryToken(User), useValue: usersRepo },
         { provide: getRepositoryToken(Redemption), useValue: redemptionsRepo },
+        { provide: getRepositoryToken(VenueAnalytics), useValue: analyticsRepo },
       ],
     }).compile();
 

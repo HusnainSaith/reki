@@ -40,6 +40,24 @@ export class UsersService {
     };
   }
 
+  async setSelectedCity(userId: string, city: string) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    user.appState = { ...(user.appState || {}), selectedCity: city.trim().toLowerCase() };
+    await this.usersRepository.save(user);
+    return { selectedCity: user.appState.selectedCity };
+  }
+
+  async setLocale(userId: string, locale?: string, timezone?: string) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (locale !== undefined) user.locale = locale.trim();
+    if (timezone !== undefined) user.timezone = timezone.trim();
+    await this.usersRepository.save(user);
+    return { locale: user.locale || null, timezone: user.timezone || null };
+  }
+
   async savePreferences(userId: string, vibes: string[], music: string[]) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -119,6 +137,8 @@ export class UsersService {
       authProvider: user.authProvider,
       isVerified: user.isVerified,
       preferences: user.preferences || { vibes: [], music: [] },
+      locale: user.locale || null,
+      timezone: user.timezone || null,
       savedVenuesCount: (user.savedVenues || []).length,
       location: {
         currentLat: user.currentLat,

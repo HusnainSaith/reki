@@ -16,7 +16,7 @@ describe('VenuesController', () => {
       findById: jest.fn().mockResolvedValue({ id: 'v-1', name: 'Bar' }),
       trackView: jest.fn().mockResolvedValue(undefined),
     };
-    controller = new VenuesController(service as VenuesService);
+    controller = new VenuesController(service as VenuesService, {} as any);
   });
 
   it('findAll', async () => {

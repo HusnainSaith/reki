@@ -16,6 +16,8 @@ import { Vibe } from '../../vibes/entities/vibe.entity';
 import { Offer } from '../../offers/entities/offer.entity';
 import { VenueAnalytics } from '../../business/entities/venue-analytics.entity';
 import { BusinessUser } from '../../business/entities/business-user.entity';
+import { City } from '../../cities/entities/city.entity';
+import { VenueAssignment } from '../../business/entities/venue-assignment.entity';
 
 @Entity('venues')
 @Index('IDX_venue_city', ['city'])
@@ -35,6 +37,13 @@ export class Venue {
 
   @Column({ default: 'Manchester' })
   city: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  cityId: string;
+
+  @ManyToOne(() => City, (city) => city.venues, { nullable: true })
+  @JoinColumn({ name: 'cityId' })
+  cityRecord: City;
 
   @Column()
   area: string;
@@ -75,6 +84,9 @@ export class Venue {
   @ManyToOne(() => BusinessUser, (businessUser) => businessUser.venues)
   @JoinColumn({ name: 'businessUserId' })
   businessUser: BusinessUser;
+
+  @OneToMany(() => VenueAssignment, (assignment) => assignment.venue)
+  assignments: VenueAssignment[];
 
   @OneToOne(() => Busyness, (busyness) => busyness.venue)
   busyness: Busyness;

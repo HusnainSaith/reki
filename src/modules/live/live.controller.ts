@@ -1,8 +1,9 @@
-import { Controller, Sse, Query, UseGuards, Param } from '@nestjs/common';
+import { Controller, Get, Sse, Query, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiParam, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { Observable, interval, map } from 'rxjs';
+import { Observable, concat, defer, interval, map, merge } from 'rxjs';
 import { JwtAuthGuard } from '../auth/guards';
 import { LiveGateway } from './live.gateway';
+import { LiveService } from './live.service';
 
 interface MessageEvent {
   data: string | object;
@@ -15,24 +16,40 @@ interface MessageEvent {
 @Controller('live')
 @UseGuards(JwtAuthGuard)
 export class LiveController {
-  constructor(private readonly liveGateway: LiveGateway) {}
+  constructor(
+    private readonly liveGateway: LiveGateway,
+    private readonly liveService: LiveService,
+  ) {}
+
+  @Get('snapshot')
+  @ApiOperation({ summary: 'Get the current city live feed snapshot' })
+  @ApiQuery({ name: 'city', required: false, example: 'manchester' })
+  async snapshot(@Query('city') city?: string) {
+    return this.liveService.getSnapshot(city || 'manchester');
+  }
 
   @Sse('feed')
   @ApiOperation({ summary: 'SSE fallback: live feed updates (heartbeat every 30s)' })
   @ApiQuery({ name: 'city', required: false, example: 'manchester' })
   @ApiOkResponse({ description: 'SSE stream (text/event-stream) of live feed heartbeats' })
   feedStream(@Query('city') city?: string): Observable<MessageEvent> {
-    // SSE fallback: sends heartbeat every 30 seconds
-    // Real data pushed via WebSocket; this is the polling fallback
-    return interval(30000).pipe(
+    const normalizedCity = (city || 'manchester').trim().toLowerCase();
+    const initial = defer(() => this.liveService.getSnapshot(normalizedCity)).pipe(
+      map((snapshot) => ({ data: JSON.stringify({ type: 'snapshot', ...snapshot }) })),
+    );
+    const events = this.liveGateway.eventsForCity(normalizedCity).pipe(
+      map((event) => ({ data: JSON.stringify(event) })),
+    );
+    const heartbeats = interval(30000).pipe(
       map(() => ({
         data: JSON.stringify({
           type: 'heartbeat',
           timestamp: new Date().toISOString(),
-          city: city || 'manchester',
+          city: normalizedCity,
         }),
       })),
     );
+    return concat(initial, merge(events, heartbeats));
   }
 
   @Sse('venue/:venueId')

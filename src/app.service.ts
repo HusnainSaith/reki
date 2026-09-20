@@ -9,13 +9,22 @@ export class AppService {
     private dataSource: DataSource,
   ) {}
 
-  getAppConfig() {
+  getAppConfig(acceptLanguage?: string) {
+    const supportedLocales = this.configService.get<string[]>('app.supportedLocales') || ['en-GB'];
+    const requestedLocale = acceptLanguage?.split(',')[0]?.trim();
+    const locale = requestedLocale && supportedLocales.includes(requestedLocale)
+      ? requestedLocale
+      : supportedLocales[0];
+
     return {
       appName: 'REKI',
       tagline: 'Discover the Manchester vibe.',
       city: this.configService.get<string>('app.defaultCity'),
       version: '2.0.0',
       minAppVersion: '1.0.0',
+      locale,
+      direction: locale.toLowerCase().startsWith('ar') ? 'rtl' : 'ltr',
+      supportedLocales,
     };
   }
 

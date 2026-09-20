@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Headers } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
 
@@ -10,8 +10,8 @@ export class AppController {
   @Get('config/app')
   @ApiOperation({ summary: 'Get app configuration (city, version, tagline)' })
   @ApiOkResponse({ description: 'App config returned' })
-  getAppConfig() {
-    return this.appService.getAppConfig();
+  getAppConfig(@Headers('accept-language') acceptLanguage?: string) {
+    return this.appService.getAppConfig(acceptLanguage);
   }
 
   @Get('health')

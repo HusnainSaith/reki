@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '../auth/guards';
 import { NoGuestGuard } from '../../common/guards';
 import { CurrentUser } from '../auth/decorators';
 import { User } from './entities/user.entity';
-import { UpdatePreferencesDto, UpdateProfileDto } from './dto';
+import { UpdateCityDto, UpdateLocaleDto, UpdatePreferencesDto, UpdateProfileDto } from './dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -60,6 +60,22 @@ export class UsersController {
   @ApiForbiddenResponse({ description: 'Guest users cannot update preferences' })
   async updatePreferences(@CurrentUser() user: User, @Body() dto: UpdatePreferencesDto) {
     return this.usersService.savePreferences(user.id, dto.vibes, dto.music);
+  }
+
+  @Put('city')
+  @UseGuards(NoGuestGuard)
+  @ApiOperation({ summary: 'Set the current city preference' })
+  @ApiBody({ type: UpdateCityDto })
+  async setCity(@CurrentUser() user: User, @Body() dto: UpdateCityDto) {
+    return this.usersService.setSelectedCity(user.id, dto.city);
+  }
+
+  @Put('locale')
+  @UseGuards(NoGuestGuard)
+  @ApiOperation({ summary: 'Set locale and timezone preferences' })
+  @ApiBody({ type: UpdateLocaleDto })
+  async setLocale(@CurrentUser() user: User, @Body() dto: UpdateLocaleDto) {
+    return this.usersService.setLocale(user.id, dto.locale, dto.timezone);
   }
 
   @Get('saved-venues')

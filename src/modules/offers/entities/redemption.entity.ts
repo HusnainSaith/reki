@@ -58,6 +58,9 @@ export class Redemption {
   @Column({ type: 'timestamp', nullable: true })
   redeemedAt: Date;
 
+  @Column({ type: 'uuid', nullable: true })
+  redeemedByBusinessUserId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

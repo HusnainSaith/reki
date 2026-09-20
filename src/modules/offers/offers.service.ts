@@ -10,6 +10,7 @@ import { generateVoucherCode, generateTransactionId } from '../../common/utils/g
 import { PKPass } from 'passkit-generator';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class OffersService {
@@ -34,7 +35,7 @@ export class OffersService {
   }
 
   async findById(id: string): Promise<Offer | null> {
-    return this.offersRepository.findOne({ where: { id }, relations: ['venue'] });
+    return this.offersRepository.findOne({ where: { id }, relations: ['venue', 'venue.cityRecord'] });
   }
 
   async findAll(): Promise<Offer[]> {
@@ -83,15 +84,15 @@ export class OffersService {
     if (offer.isAvailableNow) return true;
 
     // Rule 2: check valid day
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const today = days[now.getDay()];
+    const local = this.getLocalOfferTime(offer, now);
+    const today = local.weekday;
     if (offer.validDays && offer.validDays.length > 0 && !offer.validDays.includes(today)) {
       return false;
     }
 
     // Rule 3: check valid time window
     if (offer.validTimeStart && offer.validTimeEnd) {
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const currentTime = local.time;
 
       // Handle overnight offers (e.g., 22:00 - 02:00)
       if (offer.validTimeStart > offer.validTimeEnd) {
@@ -125,10 +126,10 @@ export class OffersService {
     if (offer.redemptionCount >= offer.maxRedemptions) return OfferStatus.EXPIRED;
 
     if (offer.validTimeStart) {
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const local = this.getLocalOfferTime(offer, now);
+      const currentTime = local.time;
       // Check if today is a valid day
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const today = days[now.getDay()];
+      const today = local.weekday;
       const isValidDay = !offer.validDays || offer.validDays.length === 0 || offer.validDays.includes(today);
 
       if (isValidDay && currentTime < offer.validTimeStart) {
@@ -148,6 +149,19 @@ export class OffersService {
     return offer.savingValue ? Number(offer.savingValue) : 0;
   }
 
+  private getLocalOfferTime(offer: Offer, date: Date) {
+    const timezone = offer.venue?.cityRecord?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return { weekday: values.weekday, time: `${values.hour}:${values.minute}` };
+  }
+
   /**
    * Claim an offer — create a redemption with voucher code.
    */
@@ -157,13 +171,61 @@ export class OffersService {
       userId,
       venueId,
       voucherCode: generateVoucherCode(),
-      qrCodeData: JSON.stringify({ offerId, userId, timestamp: Date.now() }),
+      qrCodeData: '',
       status: RedemptionStatus.ACTIVE,
       transactionId: generateTransactionId(),
       savingValue: 0, // will be set on redeem
     });
 
-    return this.redemptionsRepository.save(redemption);
+    const saved = await this.redemptionsRepository.save(redemption);
+    saved.qrCodeData = this.createQrToken(saved);
+    return this.redemptionsRepository.save(saved);
+  }
+
+  verifyQrToken(token: string, redemption: Redemption): boolean {
+    const parts = token.split('.');
+    if (parts.length !== 3 || parts[0] !== 'v1') return false;
+
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
+    const expectedSignature = this.signQrPayload(payload);
+    const providedSignature = Buffer.from(parts[2]);
+    const validSignature = Buffer.from(expectedSignature);
+    if (providedSignature.length !== validSignature.length
+      || !crypto.timingSafeEqual(providedSignature, validSignature)) return false;
+
+    try {
+      const data = JSON.parse(payload) as {
+        redemptionId: string;
+        offerId: string;
+        venueId: string;
+        userId: string;
+        expiresAt: number;
+      };
+      return data.redemptionId === redemption.id
+        && data.offerId === redemption.offerId
+        && data.venueId === redemption.venueId
+        && data.userId === redemption.userId
+        && data.expiresAt > Date.now();
+    } catch {
+      return false;
+    }
+  }
+
+  private createQrToken(redemption: Redemption): string {
+    const payload = JSON.stringify({
+      redemptionId: redemption.id,
+      offerId: redemption.offerId,
+      venueId: redemption.venueId,
+      userId: redemption.userId,
+      expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+    });
+    const encodedPayload = Buffer.from(payload).toString('base64url');
+    return `v1.${encodedPayload}.${this.signQrPayload(payload)}`;
+  }
+
+  private signQrPayload(payload: string): string {
+    const secret = this.configService.get<string>('app.jwt.secret') || 'reki-dev-jwt-secret-2024';
+    return crypto.createHmac('sha256', secret).update(payload).digest('base64url');
   }
 
   /**
@@ -181,23 +243,42 @@ export class OffersService {
   async findClaimByVoucherCode(voucherCode: string): Promise<Redemption | null> {
     return this.redemptionsRepository.findOne({
       where: { voucherCode },
-      relations: ['offer'],
+      relations: ['offer', 'offer.venue', 'offer.venue.cityRecord'],
     });
+  }
+
+  async findClaimByQrToken(token: string): Promise<Redemption | null> {
+    const encodedPayload = token.split('.')[1];
+    if (!encodedPayload) return null;
+    try {
+      const data = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8')) as { redemptionId?: string };
+      if (!data.redemptionId) return null;
+      return this.redemptionsRepository.findOne({
+        where: { id: data.redemptionId },
+        relations: ['offer', 'offer.venue', 'offer.venue.cityRecord'],
+      });
+    } catch {
+      return null;
+    }
   }
 
   /**
    * Redeem a claimed offer.
    */
-  async redeemOffer(redemptionId: string, savingValue: number): Promise<Redemption> {
+  async redeemOffer(redemptionId: string, savingValue: number, redeemedByBusinessUserId?: string): Promise<Redemption> {
     const redemption = await this.redemptionsRepository.findOne({
       where: { id: redemptionId },
     });
 
     if (!redemption) throw new Error('Redemption not found');
+    if (redemption.status !== RedemptionStatus.ACTIVE) {
+      throw new Error('Redemption has already been redeemed');
+    }
 
     redemption.status = RedemptionStatus.REDEEMED;
     redemption.redeemedAt = new Date();
     redemption.savingValue = savingValue;
+    redemption.redeemedByBusinessUserId = redeemedByBusinessUserId;
 
     // Increment offer redemption count
     await this.offersRepository.increment({ id: redemption.offerId }, 'redemptionCount', 1);
@@ -206,6 +287,39 @@ export class OffersService {
     await this.incrementAnalytic(redemption.venueId, 'redemptions');
 
     return this.redemptionsRepository.save(redemption);
+  }
+
+  async redeemOfferByWorker(redemptionId: string, savingValue: number, businessUserId: string): Promise<Redemption> {
+    const redeemedAt = new Date();
+    const result = await this.redemptionsRepository.update(
+      { id: redemptionId, status: RedemptionStatus.ACTIVE },
+      {
+        status: RedemptionStatus.REDEEMED,
+        redeemedAt,
+        savingValue,
+        redeemedByBusinessUserId: businessUserId,
+      },
+    );
+    if (!result.affected) throw new Error('Redemption has already been redeemed');
+
+    const redemption = await this.redemptionsRepository.findOne({ where: { id: redemptionId } });
+    if (!redemption) throw new Error('Redemption not found');
+    const offerUpdate = await this.offersRepository
+      .createQueryBuilder()
+      .update(Offer)
+      .set({ redemptionCount: () => '"redemptionCount" + 1' })
+      .where('"id" = :offerId', { offerId: redemption.offerId })
+      .andWhere('("maxRedemptions" = 0 OR "redemptionCount" < "maxRedemptions")')
+      .execute();
+    if (!offerUpdate.affected) {
+      await this.redemptionsRepository.update(
+        { id: redemptionId, status: RedemptionStatus.REDEEMED },
+        { status: RedemptionStatus.ACTIVE, redeemedAt: null, redeemedByBusinessUserId: null },
+      );
+      throw new Error('Offer redemption limit reached');
+    }
+    await this.incrementAnalytic(redemption.venueId, 'redemptions');
+    return redemption;
   }
 
   /**
@@ -231,23 +345,13 @@ export class OffersService {
     const wwdrPath = this.configService.get<string>('app.apple.passWwdrPath');
     const keyPassword = this.configService.get<string>('app.apple.passKeyPassword');
 
-    // If Apple Wallet is not configured, return a mock stub for development/demo
+    // Wallet passes must never be issued as unsigned development stubs.
     const isConfigured = teamId && passTypeId && certPath && keyPath && wwdrPath;
     if (!isConfigured) {
-      const stub = {
-        _note: 'Apple Wallet not configured — development stub',
-        passType: 'coupon',
-        offerTitle: offer.title,
-        venue: offer.venue?.name || 'REKI Venue',
-        voucherCode,
-        offerId: offer.id,
-        barcode: {
-          format: 'QR',
-          message: `reki://offer/${offer.id}/${voucherCode}`,
-        },
-        instructions: 'Set APPLE_TEAM_ID, APPLE_PASS_TYPE_ID, APPLE_PASS_CERT_PATH, APPLE_PASS_KEY_PATH, APPLE_PASS_WWDR_PATH to generate a real .pkpass file.',
-      };
-      return Buffer.from(JSON.stringify(stub));
+      throw new Error(
+        'Apple Wallet certificate paths not configured. Apple Wallet configuration incomplete. ' +
+        'Set APPLE_PASS_CERT_PATH, APPLE_PASS_KEY_PATH, and APPLE_PASS_WWDR_PATH.',
+      );
     }
 
     // Check if certificate files exist

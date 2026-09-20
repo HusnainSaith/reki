@@ -30,6 +30,8 @@ import { CronModule } from './modules/cron/cron.module';
 import { SeedModule } from './seed/seed.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { EngagementModule } from './modules/engagement/engagement.module';
+import { CitiesModule } from './modules/cities/cities.module';
+import { WorkerModule } from './modules/worker/worker.module';
 
 @Module({
   imports: [
@@ -90,6 +92,8 @@ import { EngagementModule } from './modules/engagement/engagement.module';
     SeedModule,
     UploadModule,
     EngagementModule,
+    CitiesModule,
+    WorkerModule,
   ],
   controllers: [AppController],
   providers: [

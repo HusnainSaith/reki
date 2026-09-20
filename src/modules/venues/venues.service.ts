@@ -39,11 +39,12 @@ export class VenuesService {
       .createQueryBuilder('venue')
       .leftJoinAndSelect('venue.busyness', 'busyness')
       .leftJoinAndSelect('venue.vibe', 'vibe')
-      .leftJoinAndSelect('venue.offers', 'offers');
+      .leftJoinAndSelect('venue.offers', 'offers')
+      .leftJoin('venue.cityRecord', 'cityRecord');
 
     // City filter (default Manchester)
     const city = filters?.city || 'Manchester';
-    qb.andWhere('LOWER(venue.city) = LOWER(:city)', { city });
+    qb.andWhere('LOWER(cityRecord.slug) = LOWER(:city)', { city: city.toLowerCase() });
 
     // Category filter
     if (filters?.category) {
@@ -202,10 +203,11 @@ export class VenuesService {
     const qb = this.venuesRepository
       .createQueryBuilder('venue')
       .leftJoinAndSelect('venue.busyness', 'busyness')
-      .leftJoinAndSelect('venue.vibe', 'vibe');
+      .leftJoinAndSelect('venue.vibe', 'vibe')
+      .leftJoin('venue.cityRecord', 'cityRecord');
 
     const searchCity = city || 'Manchester';
-    qb.andWhere('LOWER(venue.city) = LOWER(:city)', { city: searchCity });
+    qb.andWhere('LOWER(cityRecord.slug) = LOWER(:city)', { city: searchCity.toLowerCase() });
 
     qb.andWhere(
       '(LOWER(venue.name) LIKE LOWER(:q) OR LOWER(venue.area) LIKE LOWER(:q) OR venue.tags::text ILIKE :q)',
@@ -218,15 +220,17 @@ export class VenuesService {
 
   async getFilterOptions(city?: string) {
     const searchCity = city || 'Manchester';
-    const venues = await this.venuesRepository.find({
-      where: { city: searchCity },
-      select: ['priceLevel'],
-    });
+    const venues = await this.venuesRepository
+      .createQueryBuilder('venue')
+      .leftJoin('venue.cityRecord', 'cityRecord')
+      .where('LOWER(cityRecord.slug) = LOWER(:city)', { city: searchCity })
+      .select('venue.priceLevel', 'priceLevel')
+      .getRawMany();
 
     const vibes = await this.venuesRepository
       .createQueryBuilder('venue')
       .leftJoin('venue.vibe', 'vibe')
-      .where('LOWER(venue.city) = LOWER(:city)', { city: searchCity })
+      .where('LOWER(cityRecord.slug) = LOWER(:city)', { city: searchCity.toLowerCase() })
       .select('DISTINCT unnest(vibe.tags)', 'tag')
       .getRawMany();
 
@@ -283,10 +287,14 @@ export class VenuesService {
     userLng?: number,
     bounds?: { swLat: number; swLng: number; neLat: number; neLng: number },
   ): Promise<any[]> {
-    const venues = await this.venuesRepository.find({
-      where: { city: city || 'Manchester' },
-      relations: ['busyness', 'vibe', 'offers'],
-    });
+    const venues = await this.venuesRepository
+      .createQueryBuilder('venue')
+      .leftJoinAndSelect('venue.busyness', 'busyness')
+      .leftJoinAndSelect('venue.vibe', 'vibe')
+      .leftJoinAndSelect('venue.offers', 'offers')
+      .leftJoin('venue.cityRecord', 'cityRecord')
+      .where('LOWER(cityRecord.slug) = LOWER(:city)', { city: (city || 'Manchester').toLowerCase() })
+      .getMany();
 
     let markers = venues.map((v) => {
       const busynessPercentage = v.busyness?.percentage || 0;
@@ -334,7 +342,8 @@ export class VenuesService {
       .createQueryBuilder('venue')
       .leftJoinAndSelect('venue.busyness', 'busyness')
       .leftJoinAndSelect('venue.vibe', 'vibe')
-      .where('LOWER(venue.city) = LOWER(:city)', { city: city || 'Manchester' })
+      .leftJoin('venue.cityRecord', 'cityRecord')
+      .where('LOWER(cityRecord.slug) = LOWER(:city)', { city: (city || 'Manchester').toLowerCase() })
       .orderBy('busyness.percentage', 'DESC')
       .limit(5)
       .getMany();

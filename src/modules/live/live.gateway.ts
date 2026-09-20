@@ -11,6 +11,15 @@ import {
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
+import { Subject, Observable } from 'rxjs';
+
+export interface LiveFeedEvent {
+  type: string;
+  city: string;
+  venueId?: string;
+  timestamp: string;
+  payload: any;
+}
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -31,6 +40,27 @@ export class LiveGateway
 
   // Track "currently viewing" per venue
   private venueViewers = new Map<string, Set<string>>(); // venueId → Set<socketId>
+  private cityEvents = new Subject<LiveFeedEvent>();
+
+  eventsForCity(city: string): Observable<LiveFeedEvent> {
+    const normalizedCity = city.trim().toLowerCase();
+    return new Observable((subscriber) => {
+      const subscription = this.cityEvents.subscribe((event) => {
+        if (event.city === normalizedCity) subscriber.next(event);
+      });
+      return () => subscription.unsubscribe();
+    });
+  }
+
+  private publishCityEvent(type: string, city: string, payload: any, venueId?: string) {
+    this.cityEvents.next({
+      type,
+      city: city.trim().toLowerCase(),
+      venueId,
+      timestamp: new Date().toISOString(),
+      payload,
+    });
+  }
 
   afterInit() {
     this.logger.log('WebSocket Gateway initialized on /live');
@@ -112,7 +142,7 @@ export class LiveGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { city: string },
   ) {
-    const room = `city:${data.city}`;
+    const room = `city:${data.city.trim().toLowerCase()}`;
     client.join(room);
     return { event: 'joined', room };
   }
@@ -122,7 +152,7 @@ export class LiveGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { city: string },
   ) {
-    client.leave(`city:${data.city}`);
+    client.leave(`city:${data.city.trim().toLowerCase()}`);
   }
 
   @SubscribeMessage('join:venue')
@@ -173,7 +203,7 @@ export class LiveGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { city: string },
   ) {
-    const room = `map:${data.city}`;
+    const room = `map:${data.city.trim().toLowerCase()}`;
     client.join(room);
     return { event: 'joined', room };
   }
@@ -183,7 +213,7 @@ export class LiveGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { city: string },
   ) {
-    client.leave(`map:${data.city}`);
+    client.leave(`map:${data.city.trim().toLowerCase()}`);
   }
 
   @SubscribeMessage('join:business')
@@ -220,6 +250,7 @@ export class LiveGateway
       vibeLabel?: string;
     },
   ) {
+    this.publishCityEvent('BUSYNESS_UPDATE', city, { venueId, busyness: data }, venueId);
     // City feed
     this.server.to(`city:${city}`).emit('BUSYNESS_UPDATE', { venueId, busyness: data });
 
@@ -260,6 +291,7 @@ export class LiveGateway
     venueId: string,
     data: { venueName: string; title: string; endsIn?: string },
   ) {
+    this.publishCityEvent('NEW_OFFER', city, { venueId, ...data }, venueId);
     this.server.to(`city:${city}`).emit('NEW_OFFER', { venueId, ...data });
   }
 

@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { OffersService } from './offers.service';
 import { Offer } from './entities/offer.entity';
 import { Redemption } from './entities/redemption.entity';
+import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 import { OfferStatus, RedemptionStatus } from '../../common/enums';
 import { ConfigService } from '@nestjs/config';
 
@@ -37,6 +38,11 @@ describe('OffersService', () => {
       create: jest.fn(),
       save: jest.fn(),
     };
+    const analyticsRepo = {
+      findOne: jest.fn(),
+      create: jest.fn().mockImplementation((data) => ({ ...data })),
+      save: jest.fn(),
+    };
     configService = {
       get: jest.fn(),
     };
@@ -46,6 +52,7 @@ describe('OffersService', () => {
         OffersService,
         { provide: getRepositoryToken(Offer), useValue: offersRepo },
         { provide: getRepositoryToken(Redemption), useValue: redemptionsRepo },
+        { provide: getRepositoryToken(VenueAnalytics), useValue: analyticsRepo },
         { provide: ConfigService, useValue: configService },
       ],
     }).compile();
@@ -59,7 +66,7 @@ describe('OffersService', () => {
       const result = await service.findById('offer-1');
       expect(result).toEqual(mockOffer);
       expect(offersRepo.findOne).toHaveBeenCalledWith(
-        expect.objectContaining({ relations: ['venue'] }),
+        expect.objectContaining({ relations: ['venue', 'venue.cityRecord'] }),
       );
     });
   });

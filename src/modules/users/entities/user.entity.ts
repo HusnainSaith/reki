@@ -75,6 +75,12 @@ export class User {
   @Column({ type: 'jsonb', nullable: true })
   appState: Record<string, any>;
 
+  @Column({ length: 10, nullable: true })
+  locale: string;
+
+  @Column({ length: 64, nullable: true })
+  timezone: string;
+
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
 

@@ -717,7 +717,12 @@ export class BusinessService {
   // ─── HELPERS ───────────────────────────────────────────
 
   private async generateTokens(businessUser: BusinessUser) {
-    const payload = { sub: businessUser.id, email: businessUser.email, role: 'business' };
+    const payload = {
+      sub: businessUser.id,
+      email: businessUser.email,
+      role: 'business',
+      businessRole: businessUser.role,
+    };
 
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('app.jwt.secret'),

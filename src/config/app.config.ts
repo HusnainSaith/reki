@@ -6,6 +6,7 @@ export default registerAs('app', () => ({
   defaultCity: process.env.DEFAULT_CITY || 'Manchester',
   defaultLat: parseFloat(process.env.DEFAULT_LAT) || 53.4808,
   defaultLng: parseFloat(process.env.DEFAULT_LNG) || -2.2426,
+  supportedLocales: (process.env.SUPPORTED_LOCALES || 'en-GB').split(',').map((locale) => locale.trim()).filter(Boolean),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3001',
   jwt: {
     secret: process.env.JWT_SECRET,

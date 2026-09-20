@@ -12,6 +12,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PushService } from '../modules/push/push.service';
 import { EmailService } from '../modules/email/email.service';
+import { VenueAnalytics } from '../modules/business/entities/venue-analytics.entity';
+import { NotificationsService } from '../modules/notifications/notifications.service';
 
 describe('Production Readiness Fixes Verification', () => {
   let authService: AuthService;
@@ -66,6 +68,16 @@ describe('Production Readiness Fixes Verification', () => {
     sendVerificationEmail: jest.fn(),
   };
 
+  const mockAnalyticsRepository = {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn(),
+  };
+
+  const mockNotificationsService = {
+    createWelcomeNotification: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -93,6 +105,10 @@ describe('Production Readiness Fixes Verification', () => {
           useValue: mockNotificationRepository,
         },
         {
+          provide: getRepositoryToken(VenueAnalytics),
+          useValue: mockAnalyticsRepository,
+        },
+        {
           provide: JwtService,
           useValue: mockJwtService,
         },
@@ -107,6 +123,10 @@ describe('Production Readiness Fixes Verification', () => {
         {
           provide: EmailService,
           useValue: mockEmailService,
+        },
+        {
+          provide: NotificationsService,
+          useValue: mockNotificationsService,
         },
       ],
     }).compile();

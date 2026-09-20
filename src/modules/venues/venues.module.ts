@@ -5,10 +5,12 @@ import { VenuesService } from './venues.service';
 import { Venue } from './entities/venue.entity';
 import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 import { OffersModule } from '../offers/offers.module';
+import { City } from '../cities/entities/city.entity';
+import { VenueAssignment } from '../business/entities/venue-assignment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Venue, VenueAnalytics]),
+    TypeOrmModule.forFeature([Venue, VenueAnalytics, City, VenueAssignment]),
     forwardRef(() => OffersModule),
   ],
   controllers: [VenuesController],

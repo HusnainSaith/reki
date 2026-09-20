@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as path from 'path';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -39,7 +39,7 @@ export class UploadService {
     this.validateFile(file);
 
     const ext = path.extname(file.originalname).toLowerCase();
-    const key = `${folder}/${uuidv4()}${ext}`;
+    const key = `${folder}/${randomUUID()}${ext}`;
 
     if (!this.isConfigured) {
       // Dev stub — S3 not configured, return a placeholder URL

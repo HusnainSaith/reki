@@ -18,6 +18,8 @@ import { PushModule } from '../push/push.module';
 import { LiveModule } from '../live/live.module';
 import { EmailModule } from '../email/email.module';
 import { UploadModule } from '../upload/upload.module';
+import { VenueAssignment } from './entities/venue-assignment.entity';
+import { City } from '../cities/entities/city.entity';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { UploadModule } from '../upload/upload.module';
       Notification,
       User,
       ActivityLog,
+      VenueAssignment,
+      City,
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],

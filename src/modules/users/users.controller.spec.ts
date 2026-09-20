@@ -15,6 +15,7 @@ const mockService: Partial<UsersService> = {
   unsaveVenue: jest.fn().mockResolvedValue({ removed: true }),
   getRedemptions: jest.fn().mockResolvedValue({ redemptions: [], total: 0 }),
   getProfile: jest.fn().mockResolvedValue({ id: 'u-1' }),
+  setSelectedCity: jest.fn().mockResolvedValue({ selectedCity: 'manchester' }),
 };
 
 // Helper to test NoGuestGuard directly
@@ -31,7 +32,7 @@ describe('UsersController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    controller = new UsersController(mockService as UsersService);
+    controller = new UsersController(mockService as UsersService, {} as any);
   });
 
   // ─── NoGuestGuard unit tests ───────────────────────────────────────────────

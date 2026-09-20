@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { BusinessRole } from '../../../common/enums';
 import { Venue } from '../../venues/entities/venue.entity';
+import { VenueAssignment } from './venue-assignment.entity';
 
 @Entity('business_users')
 export class BusinessUser {
@@ -25,6 +26,9 @@ export class BusinessUser {
 
   @OneToMany(() => Venue, (venue) => venue.businessUser)
   venues: Venue[];
+
+  @OneToMany(() => VenueAssignment, (assignment) => assignment.businessUser)
+  venueAssignments: VenueAssignment[];
 
   @Column({ type: 'enum', enum: BusinessRole, default: BusinessRole.OWNER })
   role: BusinessRole;
