@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Venue } from './entities/venue.entity';
+import { VenueLiveUpdate } from '../worker/entities/venue-live-update.entity';
 import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 import { haversineDistance, formatDistance, getBusynessColor, generateSocialProof, estimateWalkingTime, getNavigationLinks } from '../../common/utils/distance.util';
 
@@ -28,7 +29,19 @@ export class VenuesService {
     private venuesRepository: Repository<Venue>,
     @InjectRepository(VenueAnalytics)
     private analyticsRepository: Repository<VenueAnalytics>,
+    @Optional() @InjectRepository(VenueLiveUpdate)
+    private liveUpdatesRepository: Repository<VenueLiveUpdate>,
   ) {}
+
+  async getWhatsOn(venueId: string) {
+    if (!this.liveUpdatesRepository) return null;
+    const venue = await this.venuesRepository.findOne({ where: { id: venueId } });
+    if (!venue) return null;
+    return this.liveUpdatesRepository.find({
+      where: { venueId, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
 
   async findAll(filters?: VenueFilters, userPreferences?: { vibes: string[]; music: string[] }): Promise<{
     venues: any[];
@@ -230,6 +243,7 @@ export class VenuesService {
     const vibes = await this.venuesRepository
       .createQueryBuilder('venue')
       .leftJoin('venue.vibe', 'vibe')
+      .leftJoin('venue.cityRecord', 'cityRecord')
       .where('LOWER(cityRecord.slug) = LOWER(:city)', { city: searchCity.toLowerCase() })
       .select('DISTINCT unnest(vibe.tags)', 'tag')
       .getRawMany();

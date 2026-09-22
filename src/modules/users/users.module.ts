@@ -6,9 +6,10 @@ import { User } from './entities/user.entity';
 import { Redemption } from '../offers/entities/redemption.entity';
 import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 import { UploadModule } from '../upload/upload.module';
+import { City } from '../cities/entities/city.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Redemption, VenueAnalytics]), UploadModule],
+  imports: [TypeOrmModule.forFeature([User, Redemption, VenueAnalytics, City]), UploadModule],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

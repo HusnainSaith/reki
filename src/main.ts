@@ -87,7 +87,7 @@ async function bootstrap() {
   // Swagger API docs
   const config = new DocumentBuilder()
     .setTitle('REKI API')
-    .setDescription('REKI - Manchester Nightlife Discovery App Backend API')
+    .setDescription('REKI multi-city nightlife discovery and venue operations API')
     .setVersion('1.0.4')
     .addBearerAuth()
     .addTag('App', 'App config & health check')
@@ -98,6 +98,8 @@ async function bootstrap() {
     .addTag('Notifications', 'User notifications')
     .addTag('Tags', 'Vibe & music tags')
     .addTag('Business', 'Business portal (dashboard, status, offers)')
+    .addTag('Worker', 'Venue staff accounts, assignments, QR redemption, and live updates')
+    .addTag('Cities', 'Supported cities and location auto-detection')
     .addTag('Admin', 'Admin view-only APIs')
     .addTag('Devices', 'Device registration & notification preferences')
     .addTag('Live', 'Real-time updates (WebSocket + SSE fallback)')

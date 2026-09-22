@@ -17,6 +17,14 @@ export class CitiesService {
     });
   }
 
+  async findBySlug(slug: string) {
+    return this.citiesRepository.findOne({ where: { slug: slug.trim().toLowerCase(), isActive: true } });
+  }
+
+  async findById(id: string) {
+    return this.citiesRepository.findOne({ where: { id, isActive: true } });
+  }
+
   async findNearest(latitude: number, longitude: number) {
     const cities = await this.findActive();
     const nearest = cities

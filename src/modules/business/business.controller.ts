@@ -33,6 +33,7 @@ import {
 } from './dto';
 import { ForgotPasswordDto, ResetPasswordDto, LogoutDto } from '../auth/dto';
 import { VenueCategory } from '../../common/enums';
+import { UpdateLiveInfoDto } from '../worker/dto/update-live-info.dto';
 
 @ApiTags('Business')
 @Controller()
@@ -237,6 +238,21 @@ export class BusinessController {
       }
     }
     return this.businessService.updateVenue(venueId, user.id, dto, newImageUrls);
+  }
+
+  @Put('business/venues/:id/whats-on')
+  @UseGuards(JwtAuthGuard, BusinessGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Publish a venue's What's On update" })
+  @ApiParam({ name: 'id', description: 'Venue UUID', format: 'uuid' })
+  @ApiBody({ type: UpdateLiveInfoDto })
+  @ApiOkResponse({ description: "What's On update published" })
+  async updateWhatsOn(
+    @Param('id') venueId: string,
+    @CurrentUser() user: any,
+    @Body() dto: UpdateLiveInfoDto,
+  ) {
+    return this.businessService.updateWhatsOn(user.id, venueId, dto);
   }
 
   @Delete('business/venues/:id')

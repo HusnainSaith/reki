@@ -33,6 +33,10 @@ export class BusinessUser {
   @Column({ type: 'enum', enum: BusinessRole, default: BusinessRole.OWNER })
   role: BusinessRole;
 
+  /** Owner account that this manager/staff member belongs to. Owners keep this null. */
+  @Column({ type: 'uuid', nullable: true })
+  accountOwnerId: string;
+
   @Column({ nullable: true })
   phone: string;
 

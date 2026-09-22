@@ -20,6 +20,7 @@ import { EmailModule } from '../email/email.module';
 import { UploadModule } from '../upload/upload.module';
 import { VenueAssignment } from './entities/venue-assignment.entity';
 import { City } from '../cities/entities/city.entity';
+import { VenueLiveUpdate } from '../worker/entities/venue-live-update.entity';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { City } from '../cities/entities/city.entity';
       ActivityLog,
       VenueAssignment,
       City,
+      VenueLiveUpdate,
     ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],

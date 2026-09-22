@@ -70,6 +70,20 @@ export class UsersController {
     return this.usersService.setSelectedCity(user.id, dto.city);
   }
 
+  @Get('location/city')
+  @ApiOperation({ summary: 'Get the city resolved from the current location' })
+  async getLocationCity(@CurrentUser() user: User) {
+    return this.usersService.getLocationCity(user.id);
+  }
+
+  @Post('location/city')
+  @UseGuards(NoGuestGuard)
+  @ApiOperation({ summary: 'Set the current city preference' })
+  @ApiBody({ type: UpdateCityDto })
+  async postLocationCity(@CurrentUser() user: User, @Body() dto: UpdateCityDto) {
+    return this.usersService.setSelectedCity(user.id, dto.city);
+  }
+
   @Put('locale')
   @UseGuards(NoGuestGuard)
   @ApiOperation({ summary: 'Set locale and timezone preferences' })

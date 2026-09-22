@@ -9,6 +9,8 @@ import { RedeemOfferDto } from '../offers/dto/redeem-offer.dto';
 import { AssignVenueDto } from './dto/assign-venue.dto';
 import { UpdateWorkerStatusDto } from './dto/update-worker-status.dto';
 import { AuditService } from '../audit/audit.service';
+import { CreateStaffDto } from './dto/create-staff.dto';
+import { UpdateLiveInfoDto } from './dto/update-live-info.dto';
 
 @ApiTags('Worker')
 @ApiBearerAuth()
@@ -20,6 +22,24 @@ export class WorkerController {
     private readonly offersService: OffersService,
     private readonly auditService: AuditService,
   ) {}
+
+  @Get('staff')
+  @ApiOperation({ summary: 'List staff in the authenticated business team' })
+  listStaff(@CurrentUser() user: { id: string }) {
+    return this.workerService.listStaff(user.id);
+  }
+
+  @Post('staff')
+  @ApiOperation({ summary: 'Create a worker account (owner only)' })
+  createStaff(@Body() body: CreateStaffDto, @CurrentUser() user: { id: string }) {
+    return this.workerService.createStaff(user.id, body);
+  }
+
+  @Delete('staff/:staffId')
+  @ApiOperation({ summary: 'Deactivate a worker account and its assignments' })
+  deactivateStaff(@Param('staffId', ParseUUIDPipe) staffId: string, @CurrentUser() user: { id: string }) {
+    return this.workerService.deactivateStaff(user.id, staffId);
+  }
 
   @Get('venues')
   @ApiOperation({ summary: 'List venues accessible to the authenticated worker' })
@@ -61,6 +81,22 @@ export class WorkerController {
     @CurrentUser() user: { id: string },
   ) {
     return this.workerService.updateVenueStatus(user.id, venueId, body.busyness);
+  }
+
+  @Get('venues/:venueId/live-info')
+  @ApiOperation({ summary: "List active What's On updates for a venue" })
+  getLiveInfo(@Param('venueId', ParseUUIDPipe) venueId: string, @CurrentUser() user: { id: string }) {
+    return this.workerService.getLiveInfo(user.id, venueId);
+  }
+
+  @Post('venues/:venueId/live-info')
+  @ApiOperation({ summary: "Publish a live What's On update" })
+  updateLiveInfo(
+    @Param('venueId', ParseUUIDPipe) venueId: string,
+    @Body() body: UpdateLiveInfoDto,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.workerService.updateLiveInfo(user.id, venueId, body);
   }
 
   @Post('venues/:venueId/redemptions/scan')

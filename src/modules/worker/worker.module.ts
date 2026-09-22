@@ -9,9 +9,10 @@ import { OffersModule } from '../offers/offers.module';
 import { Busyness } from '../busyness/entities/busyness.entity';
 import { LiveModule } from '../live/live.module';
 import { AuditModule } from '../audit/audit.module';
+import { VenueLiveUpdate } from './entities/venue-live-update.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BusinessUser, VenueAssignment, Venue, Busyness]), OffersModule, LiveModule, AuditModule],
+  imports: [TypeOrmModule.forFeature([BusinessUser, VenueAssignment, Venue, Busyness, VenueLiveUpdate]), OffersModule, LiveModule, AuditModule],
   controllers: [WorkerController],
   providers: [WorkerService],
 })

@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,6 +28,8 @@ import { EmailService } from '../email/email.service';
 import { PushService } from '../push/push.service';
 import { LiveGateway } from '../live/live.gateway';
 import { getBusynessColor } from '../../common/utils/distance.util';
+import { City } from '../cities/entities/city.entity';
+import { VenueLiveUpdate } from '../worker/entities/venue-live-update.entity';
 
 @Injectable()
 export class BusinessService {
@@ -51,6 +54,10 @@ export class BusinessService {
     private usersRepository: Repository<User>,
     @InjectRepository(ActivityLog)
     private activityLogsRepository: Repository<ActivityLog>,
+    @Optional() @InjectRepository(City)
+    private citiesRepository: Repository<City> | undefined,
+    @Optional() @InjectRepository(VenueLiveUpdate)
+    private liveUpdatesRepository: Repository<VenueLiveUpdate>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
@@ -220,11 +227,19 @@ export class BusinessService {
   // ─── VENUE MANAGEMENT ──────────────────────────────────
 
   async createVenue(businessUserId: string, dto: any) {
+    const city = this.citiesRepository
+      ? await this.citiesRepository.createQueryBuilder('city')
+        .where('city.isActive = true')
+        .andWhere('(LOWER(city.slug) = LOWER(:city) OR LOWER(city.name) = LOWER(:city))', { city: dto.city.trim() })
+        .getOne()
+      : null;
+    if (this.citiesRepository && !city) throw new BadRequestException('City is not currently supported');
     // Create the venue
     const venue = this.venuesRepository.create({
       name: dto.name,
       address: dto.address,
       city: dto.city,
+      cityId: city?.id,
       area: dto.area,
       category: this.normalizeVenueCategory(dto.category),
       lat: dto.lat,
@@ -333,6 +348,16 @@ export class BusinessService {
       data.category = this.normalizeVenueCategory(data.category);
     }
 
+    if (data?.city && this.citiesRepository) {
+      const city = await this.citiesRepository.createQueryBuilder('city')
+        .where('city.isActive = true')
+        .andWhere('(LOWER(city.slug) = LOWER(:city) OR LOWER(city.name) = LOWER(:city))', { city: data.city.trim() })
+        .getOne();
+      if (!city) throw new BadRequestException('City is not currently supported');
+      data.cityId = city.id;
+      data.city = city.name;
+    }
+
     // Parse tags if sent as JSON string
     if (data?.tags && typeof data.tags === 'string') {
       try { data.tags = JSON.parse(data.tags); } catch { /* ignore */ }
@@ -354,6 +379,24 @@ export class BusinessService {
       message: 'Venue updated successfully',
       venue: saved,
     };
+  }
+
+  async updateWhatsOn(businessUserId: string, venueId: string, data: {
+    type: string; title: string; details?: string; startsAt?: string; endsAt?: string; isActive?: boolean;
+  }) {
+    const venue = await this.verifyOwnership(venueId, businessUserId);
+    const update = this.liveUpdatesRepository.create({
+      venueId,
+      type: data.type,
+      title: data.title,
+      details: data.details,
+      startsAt: data.startsAt ? new Date(data.startsAt) : null,
+      endsAt: data.endsAt ? new Date(data.endsAt) : null,
+      isActive: data.isActive ?? true,
+      updatedByBusinessUserId: businessUserId,
+    });
+    const saved = await this.liveUpdatesRepository.save(update);
+    return { venue, update: saved };
   }
 
   async deleteVenue(venueId: string, businessUserId: string) {

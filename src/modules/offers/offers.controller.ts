@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, NotFoundException, BadRequestException, ForbiddenException, ParseUUIDPipe, Res, StreamableFile, Header } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, NotFoundException, BadRequestException, ForbiddenException, ParseUUIDPipe, Res, StreamableFile, Header, Query } from '@nestjs/common';
 import type { Response } from 'express';
 import {
   ApiTags,
@@ -31,8 +31,8 @@ export class OffersController {
   @CacheTTL(120)
   @ApiOperation({ summary: 'Get all active offers' })
   @ApiOkResponse({ description: 'List of all active offers with venue details' })
-  async findAll() {
-    const allOffers = await this.offersService.findAll();
+  async findAll(@Query('city') city = 'manchester') {
+    const allOffers = await this.offersService.findAll(city);
     
     const enrichedOffers = allOffers.map(offer => ({
       id: offer.id,
@@ -61,6 +61,7 @@ export class OffersController {
     return {
       offers: enrichedOffers,
       count: enrichedOffers.length,
+      city: city.trim().toLowerCase(),
     };
   }
 
@@ -205,6 +206,32 @@ export class OffersController {
       status: 'redeemed',
       venueName: offer.venue?.name,
       offerTitle: offer.title,
+      transactionId: redeemed.transactionId,
+      redeemedAt: redeemed.redeemedAt,
+      savingValue: Number(redeemed.savingValue),
+      currency: redeemed.currency,
+    };
+  }
+
+  @Post('redeem-by-code')
+  @NoCache()
+  @UseGuards(JwtAuthGuard, NoGuestGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Redeem a claimed offer using its voucher code' })
+  @ApiBody({ type: RedeemOfferDto })
+  async redeemByCode(@Body() body: RedeemOfferDto, @CurrentUser() user: User) {
+    if (!body.voucherCode) throw new BadRequestException('Voucher code is required');
+    const claim = await this.offersService.findClaimByVoucherCode(body.voucherCode);
+    if (!claim || !claim.offer) throw new NotFoundException({ code: ErrorCode.OFFER_NOT_FOUND, message: 'Invalid voucher code' });
+    if (claim.userId !== user.id) throw new BadRequestException({ code: ErrorCode.FORBIDDEN, message: 'This voucher does not belong to you' });
+    if (claim.status !== 'active') throw new BadRequestException({ code: ErrorCode.ALREADY_REDEEMED, message: 'Voucher has already been redeemed or is inactive' });
+    if (!this.offersService.isOfferAvailableNow(claim.offer)) throw new BadRequestException({ code: ErrorCode.OFFER_NOT_VALID_NOW, message: 'This offer is no longer available' });
+
+    const redeemed = await this.offersService.redeemOffer(claim.id, this.offersService.calculateSaving(claim.offer));
+    return {
+      status: redeemed.status,
+      venueName: claim.offer.venue?.name,
+      offerTitle: claim.offer.title,
       transactionId: redeemed.transactionId,
       redeemedAt: redeemed.redeemedAt,
       savingValue: Number(redeemed.savingValue),

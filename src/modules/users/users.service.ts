@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Redemption } from '../offers/entities/redemption.entity';
 import { VenueAnalytics } from '../business/entities/venue-analytics.entity';
 import { paginate } from '../../common/dto';
+import { City } from '../cities/entities/city.entity';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +16,8 @@ export class UsersService {
     private redemptionsRepository: Repository<Redemption>,
     @InjectRepository(VenueAnalytics)
     private venueAnalyticsRepository: Repository<VenueAnalytics>,
+    @Optional() @InjectRepository(City)
+    private citiesRepository?: Repository<City>,
   ) {}
 
   async findById(id: string): Promise<User | null> {
@@ -44,18 +47,66 @@ export class UsersService {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    user.appState = { ...(user.appState || {}), selectedCity: city.trim().toLowerCase() };
+    const selectedCity = city.trim().toLowerCase();
+    if (this.citiesRepository) {
+      const supported = await this.citiesRepository.findOne({ where: { slug: selectedCity, isActive: true } });
+      if (!supported) throw new BadRequestException('City is not currently supported');
+    }
+    user.appState = { ...(user.appState || {}), selectedCity };
     await this.usersRepository.save(user);
     return { selectedCity: user.appState.selectedCity };
+  }
+
+  async getLocationCity(userId: string) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.currentLat !== null && user.currentLat !== undefined
+      && user.currentLng !== null && user.currentLng !== undefined && this.citiesRepository) {
+      const cities = await this.citiesRepository.find({ where: { isActive: true } });
+      const nearest = cities
+        .map((city) => ({ city, distanceKm: this.distanceKm(Number(user.currentLat), Number(user.currentLng), Number(city.latitude), Number(city.longitude)) }))
+        .sort((left, right) => left.distanceKm - right.distanceKm)[0];
+      if (nearest && nearest.distanceKm <= Number(nearest.city.detectionRadiusKm)) {
+        return { city: nearest.city, source: 'location', distanceKm: Number(nearest.distanceKm.toFixed(2)) };
+      }
+    }
+
+    const selectedCity = user.appState?.selectedCity;
+    const city = selectedCity && this.citiesRepository
+      ? await this.citiesRepository.findOne({ where: { slug: selectedCity, isActive: true } })
+      : null;
+    return { city: city || null, source: city ? 'selected' : null };
+  }
+
+  private distanceKm(latitudeA: number, longitudeA: number, latitudeB: number, longitudeB: number) {
+    const latitudeDelta = (latitudeB - latitudeA) * Math.PI / 180;
+    const longitudeDelta = (longitudeB - longitudeA) * Math.PI / 180;
+    const a = Math.sin(latitudeDelta / 2) ** 2
+      + Math.cos(latitudeA * Math.PI / 180) * Math.cos(latitudeB * Math.PI / 180) * Math.sin(longitudeDelta / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
   async setLocale(userId: string, locale?: string, timezone?: string) {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
-    if (locale !== undefined) user.locale = locale.trim();
-    if (timezone !== undefined) user.timezone = timezone.trim();
+    if (locale !== undefined) {
+      const normalizedLocale = locale.trim();
+      try { new Intl.Locale(normalizedLocale); } catch { throw new BadRequestException('Invalid locale'); }
+      user.locale = normalizedLocale;
+    }
+    if (timezone !== undefined) {
+      const normalizedTimezone = timezone.trim();
+      try { new Intl.DateTimeFormat('en', { timeZone: normalizedTimezone }); }
+      catch { throw new BadRequestException('Invalid timezone'); }
+      user.timezone = normalizedTimezone;
+    }
     await this.usersRepository.save(user);
-    return { locale: user.locale || null, timezone: user.timezone || null };
+    return {
+      locale: user.locale || null,
+      timezone: user.timezone || null,
+      direction: user.locale?.toLowerCase().match(/^(ar|fa|he|ur)(-|$)/) ? 'rtl' : 'ltr',
+    };
   }
 
   async savePreferences(userId: string, vibes: string[], music: string[]) {

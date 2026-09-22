@@ -295,6 +295,14 @@ export class LiveGateway
     this.server.to(`city:${city}`).emit('NEW_OFFER', { venueId, ...data });
   }
 
+  broadcastWhatsOnUpdate(city: string, venueId: string, data: any) {
+    const normalizedCity = city.trim().toLowerCase();
+    const payload = { venueId, update: data };
+    this.publishCityEvent('WHATS_ON_UPDATE', normalizedCity, payload, venueId);
+    this.server.to(`city:${normalizedCity}`).emit('WHATS_ON_UPDATE', payload);
+    this.server.to(`venue:${venueId}`).emit('WHATS_ON_UPDATE', data);
+  }
+
   /**
    * Broadcast offer countdown to venue viewers.
    */

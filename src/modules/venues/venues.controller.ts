@@ -177,6 +177,17 @@ export class VenuesController {
     return venue;
   }
 
+  @Get(':id/whats-on')
+  @CacheTTL(30)
+  @ApiOperation({ summary: "Get active What's On updates for a venue" })
+  @ApiParam({ name: 'id', description: 'Venue UUID', format: 'uuid' })
+  @ApiOkResponse({ description: "Active What's On updates" })
+  async getWhatsOn(@Param('id', ParseUUIDPipe) id: string) {
+    const updates = await this.venuesService.getWhatsOn(id);
+    if (!updates) throw new NotFoundException({ code: ErrorCode.VENUE_NOT_FOUND, message: 'Venue not found' });
+    return updates;
+  }
+
   @Post(':id/view')
   @NoCache()
   @ApiOperation({ summary: 'Track venue view' })

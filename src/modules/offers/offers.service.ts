@@ -38,12 +38,14 @@ export class OffersService {
     return this.offersRepository.findOne({ where: { id }, relations: ['venue', 'venue.cityRecord'] });
   }
 
-  async findAll(): Promise<Offer[]> {
-    return this.offersRepository.find({ 
-      where: { isActive: true },
-      relations: ['venue'],
-      order: { createdAt: 'DESC' },
-    });
+  async findAll(city = 'manchester'): Promise<Offer[]> {
+    return this.offersRepository.createQueryBuilder('offer')
+      .innerJoinAndSelect('offer.venue', 'venue')
+      .innerJoinAndSelect('venue.cityRecord', 'city')
+      .where('offer.isActive = true')
+      .andWhere('LOWER(city.slug) = :city', { city: city.trim().toLowerCase() })
+      .orderBy('offer.createdAt', 'DESC')
+      .getMany();
   }
 
   async findByVenueId(venueId: string): Promise<Offer[]> {

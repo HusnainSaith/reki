@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Offer } from '../offers/entities/offer.entity';
 import { Venue } from '../venues/entities/venue.entity';
 import { OffersService } from '../offers/offers.service';
+import { VenueLiveUpdate } from '../worker/entities/venue-live-update.entity';
+import { In } from 'typeorm';
 
 @Injectable()
 export class LiveService {
@@ -12,6 +14,8 @@ export class LiveService {
     private readonly offersRepository: Repository<Offer>,
     @InjectRepository(Venue)
     private readonly venuesRepository: Repository<Venue>,
+    @InjectRepository(VenueLiveUpdate)
+    private readonly liveUpdatesRepository: Repository<VenueLiveUpdate>,
     private readonly offersService: OffersService,
   ) {}
 
@@ -32,6 +36,9 @@ export class LiveService {
       })
       : [];
     const venueById = new Map(venues.map((venue) => [venue.id, venue]));
+    const liveUpdates = venueIds.length ? await this.liveUpdatesRepository.find({
+      where: { venueId: In(venueIds), isActive: true }, order: { createdAt: 'DESC' },
+    }) : [];
 
     return {
       city: normalizedCity,
@@ -46,6 +53,7 @@ export class LiveService {
         offers: offers
           .filter((offer) => offer.venueId === venue.id && this.offersService.isOfferAvailableNow(offer))
           .map((offer) => ({ id: offer.id, title: offer.title, type: offer.type })),
+        whatsOn: liveUpdates.filter((update) => update.venueId === venue.id),
       })),
       offers: offers
         .filter((offer) => venueById.has(offer.venueId) && this.offersService.isOfferAvailableNow(offer))
