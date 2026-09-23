@@ -12,6 +12,7 @@ import { Notification } from '../modules/notifications/entities/notification.ent
 import { Tag } from '../modules/tags/entities/tag.entity';
 import { VenueAnalytics } from '../modules/business/entities/venue-analytics.entity';
 import { BusinessUser } from '../modules/business/entities/business-user.entity';
+import { City } from '../modules/cities/entities/city.entity';
 
 import { Role } from '../common/enums/roles.enum';
 import { TagCategory } from '../common/enums/tag-category.enum';
@@ -51,6 +52,8 @@ export class SeedService implements OnModuleInit {
     private analyticsRepository: Repository<VenueAnalytics>,
     @InjectRepository(BusinessUser)
     private businessUsersRepository: Repository<BusinessUser>,
+    @InjectRepository(City)
+    private citiesRepository: Repository<City>,
   ) {}
 
   async onModuleInit() {
@@ -65,6 +68,9 @@ export class SeedService implements OnModuleInit {
           this.logger.log('Seed complete!');
         } else {
           this.logger.log(`Database already has ${venueCount} venues — skipping seed.`);
+          // Ensure cities exist and backfill cityId on existing venues
+          await this.seedCities();
+          await this.backfillVenueCityIds();
         }
         return; // Success — exit retry loop
       } catch (err) {
@@ -82,37 +88,55 @@ export class SeedService implements OnModuleInit {
   }
 
   async seed() {
-    // 1. Seed Tags
+    // 1. Seed Cities
+    await this.seedCities();
+
+    // 2. Seed Tags
     await this.seedTags();
 
-    // 2. Seed Admin User
+    // 3. Seed Admin User
     const adminUser = await this.seedAdminUser();
 
-    // 3. Seed Demo User (for notifications)
+    // 4. Seed Demo User (for notifications)
     const demoUser = await this.seedDemoUser();
 
-    // 4. Seed Venues
+    // 5. Seed Venues
     const savedVenues = await this.seedVenues();
 
-    // 5. Seed Busyness
+    // 6. Seed Busyness
     await this.seedBusyness(savedVenues);
 
-    // 6. Seed Vibes
+    // 7. Seed Vibes
     await this.seedVibes(savedVenues);
 
-    // 7. Seed Offers
+    // 8. Seed Offers
     await this.seedOffers(savedVenues);
 
-    // 8. Seed Notifications
+    // 9. Seed Notifications
     await this.seedNotifications(demoUser, savedVenues);
 
-    // 9. Seed Analytics
+    // 10. Seed Analytics
     await this.seedAnalytics(savedVenues);
 
-    // 10. Seed Business Users (Week 4)
+    // 11. Seed Business Users (Week 4)
     await this.seedBusinessUsers(savedVenues);
 
     this.logger.log('All seed data inserted successfully.');
+  }
+
+  private async seedCities(): Promise<void> {
+    const cities = [
+      { slug: 'manchester', name: 'Manchester', countryCode: 'GB', timezone: 'Europe/London', defaultLocale: 'en-GB', latitude: 53.4808, longitude: -2.2426, detectionRadiusKm: 50, isActive: true },
+      { slug: 'london', name: 'London', countryCode: 'GB', timezone: 'Europe/London', defaultLocale: 'en-GB', latitude: 51.5074, longitude: -0.1278, detectionRadiusKm: 50, isActive: true },
+      { slug: 'birmingham', name: 'Birmingham', countryCode: 'GB', timezone: 'Europe/London', defaultLocale: 'en-GB', latitude: 52.4862, longitude: -1.8904, detectionRadiusKm: 50, isActive: true },
+    ];
+    for (const cityData of cities) {
+      const existing = await this.citiesRepository.findOne({ where: { slug: cityData.slug } });
+      if (!existing) {
+        await this.citiesRepository.save(this.citiesRepository.create(cityData));
+      }
+    }
+    this.logger.log('Seeded cities: Manchester, London, Birmingham');
   }
 
   private async seedTags(): Promise<void> {
@@ -161,7 +185,13 @@ export class SeedService implements OnModuleInit {
   }
 
   private async seedVenues(): Promise<Venue[]> {
-    const venues = MANCHESTER_VENUES.map((v) => this.venuesRepository.create(v));
+    const manchesterCity = await this.citiesRepository.findOne({ where: { slug: 'manchester' } });
+    const venues = MANCHESTER_VENUES.map((v) =>
+      this.venuesRepository.create({
+        ...v,
+        cityId: manchesterCity?.id,
+      }),
+    );
     const saved = await this.venuesRepository.save(venues);
     this.logger.log(`Seeded ${saved.length} Manchester venues`);
     return saved;
@@ -300,5 +330,30 @@ export class SeedService implements OnModuleInit {
 
     await this.venuesRepository.save(venueUpdates);
     this.logger.log(`Seeded ${savedUsers.length} business users`);
+  }
+
+  private async backfillVenueCityIds(): Promise<void> {
+    const cities = await this.citiesRepository.find({ where: { isActive: true } });
+    if (cities.length === 0) return;
+
+    const cityByName = new Map(cities.map((c) => [c.name.toLowerCase(), c]));
+    const venuesWithoutCity = await this.venuesRepository
+      .createQueryBuilder('venue')
+      .where('venue.cityId IS NULL')
+      .getMany();
+
+    if (venuesWithoutCity.length === 0) return;
+
+    const updates = venuesWithoutCity
+      .map((v) => {
+        const city = cityByName.get(v.city?.toLowerCase());
+        return city ? { id: v.id, cityId: city.id } : null;
+      })
+      .filter(Boolean);
+
+    if (updates.length > 0) {
+      await this.venuesRepository.save(updates);
+      this.logger.log(`Backfilled cityId for ${updates.length} existing venues`);
+    }
   }
 }

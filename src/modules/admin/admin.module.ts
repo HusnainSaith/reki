@@ -12,6 +12,7 @@ import { BusinessUser } from '../business/entities/business-user.entity';
 import { GeofenceLog } from '../geofence/entities/geofence-log.entity';
 import { Device } from '../devices/entities/device.entity';
 import { SyncAction } from '../sync/entities/sync-action.entity';
+import { City } from '../cities/entities/city.entity';
 import { PushModule } from '../push/push.module';
 import { LiveModule } from '../live/live.module';
 import { SyncModule } from '../sync/sync.module';
@@ -29,6 +30,7 @@ import { SyncModule } from '../sync/sync.module';
       GeofenceLog,
       Device,
       SyncAction,
+      City,
     ]),
     PushModule,
     LiveModule,

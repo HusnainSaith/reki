@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
@@ -10,6 +10,7 @@ import { ActivityLog } from '../audit/entities/activity-log.entity';
 import { BusinessUser } from '../business/entities/business-user.entity';
 import { GeofenceLog } from '../geofence/entities/geofence-log.entity';
 import { Device } from '../devices/entities/device.entity';
+import { City } from '../cities/entities/city.entity';
 import { paginate } from '../../common/dto';
 import { PushService } from '../push/push.service';
 import { LiveGateway } from '../live/live.gateway';
@@ -36,6 +37,8 @@ export class AdminService {
     private geofenceLogsRepository: Repository<GeofenceLog>,
     @InjectRepository(Device)
     private devicesRepository: Repository<Device>,
+    @InjectRepository(City)
+    private citiesRepository: Repository<City>,
     private pushService: PushService,
     private liveGateway: LiveGateway,
     private syncService: SyncService,
@@ -292,5 +295,41 @@ export class AdminService {
 
   async getOfflineStats() {
     return this.syncService.getOfflineStats();
+  }
+
+  // ─── CITY MANAGEMENT ─────────────────────────────────
+
+  async getCities() {
+    return this.citiesRepository.find({ order: { name: 'ASC' } });
+  }
+
+  async createCity(data: Partial<City>) {
+    const slug = data.slug?.trim().toLowerCase();
+    const existing = await this.citiesRepository.findOne({ where: { slug } });
+    if (existing) throw new ConflictException(`City with slug "${slug}" already exists`);
+    const city = this.citiesRepository.create({
+      ...data,
+      slug,
+      defaultLocale: data.defaultLocale || 'en-GB',
+      detectionRadiusKm: data.detectionRadiusKm ?? 50,
+      isActive: data.isActive ?? true,
+    });
+    return this.citiesRepository.save(city);
+  }
+
+  async updateCity(id: string, data: Partial<City>) {
+    const city = await this.citiesRepository.findOne({ where: { id } });
+    if (!city) throw new NotFoundException('City not found');
+    if (data.slug) data.slug = data.slug.trim().toLowerCase();
+    Object.assign(city, data);
+    return this.citiesRepository.save(city);
+  }
+
+  async deleteCity(id: string) {
+    const city = await this.citiesRepository.findOne({ where: { id } });
+    if (!city) throw new NotFoundException('City not found');
+    city.isActive = false;
+    await this.citiesRepository.save(city);
+    return { success: true, message: 'City deactivated' };
   }
 }

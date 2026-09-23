@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, NotFoundException } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -11,6 +11,7 @@ import {
   ApiUnauthorizedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { PushService } from '../push/push.service';
@@ -19,6 +20,8 @@ import { RolesGuard } from '../../common/guards';
 import { Roles } from '../../common/decorators';
 import { Role, NotificationType } from '../../common/enums';
 import { TestPushDto } from './dto/test-push.dto';
+import { CreateCityDto } from './dto/create-city.dto';
+import { UpdateCityDto } from './dto/update-city.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -188,5 +191,42 @@ export class AdminController {
       firebaseConfigured: this.pushService.isConfigured(),
       pushStats: this.pushService.getStats(),
     };
+  }
+
+  // ─── CITY MANAGEMENT ─────────────────────────────────
+
+  @Get('cities')
+  @ApiOperation({ summary: 'List all cities (admin only)' })
+  @ApiOkResponse({ description: 'All cities including inactive ones' })
+  async getCities() {
+    return this.adminService.getCities();
+  }
+
+  @Post('cities')
+  @ApiOperation({ summary: 'Create a new city (admin only)' })
+  @ApiBody({ type: CreateCityDto })
+  @ApiCreatedResponse({ description: 'City created' })
+  @ApiConflictResponse({ description: 'City slug already exists' })
+  async createCity(@Body() dto: CreateCityDto) {
+    return this.adminService.createCity(dto);
+  }
+
+  @Put('cities/:id')
+  @ApiOperation({ summary: 'Update a city (admin only)' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiBody({ type: UpdateCityDto })
+  @ApiOkResponse({ description: 'City updated' })
+  @ApiNotFoundResponse({ description: 'City not found' })
+  async updateCity(@Param('id') id: string, @Body() dto: UpdateCityDto) {
+    return this.adminService.updateCity(id, dto);
+  }
+
+  @Delete('cities/:id')
+  @ApiOperation({ summary: 'Deactivate a city (admin only)' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiOkResponse({ description: 'City deactivated' })
+  @ApiNotFoundResponse({ description: 'City not found' })
+  async deleteCity(@Param('id') id: string) {
+    return this.adminService.deleteCity(id);
   }
 }

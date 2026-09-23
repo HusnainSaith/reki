@@ -227,10 +227,11 @@ export class BusinessService {
   // ─── VENUE MANAGEMENT ──────────────────────────────────
 
   async createVenue(businessUserId: string, dto: any) {
+    const submittedCity = typeof dto.city === 'string' ? dto.city.trim() : '';
     const city = this.citiesRepository
       ? await this.citiesRepository.createQueryBuilder('city')
         .where('city.isActive = true')
-        .andWhere('(LOWER(city.slug) = LOWER(:city) OR LOWER(city.name) = LOWER(:city))', { city: dto.city.trim() })
+        .andWhere('(LOWER(city.slug) = LOWER(:city) OR LOWER(city.name) = LOWER(:city))', { city: submittedCity })
         .getOne()
       : null;
     if (this.citiesRepository && !city) throw new BadRequestException('City is not currently supported');
@@ -238,7 +239,7 @@ export class BusinessService {
     const venue = this.venuesRepository.create({
       name: dto.name,
       address: dto.address,
-      city: dto.city,
+      city: city?.name || submittedCity,
       cityId: city?.id,
       area: dto.area,
       category: this.normalizeVenueCategory(dto.category),

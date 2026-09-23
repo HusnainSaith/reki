@@ -11,6 +11,7 @@ import { Notification } from '../modules/notifications/entities/notification.ent
 import { Tag } from '../modules/tags/entities/tag.entity';
 import { VenueAnalytics } from '../modules/business/entities/venue-analytics.entity';
 import { BusinessUser } from '../modules/business/entities/business-user.entity';
+import { City } from '../modules/cities/entities/city.entity';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { BusinessUser } from '../modules/business/entities/business-user.entity'
       Tag,
       VenueAnalytics,
       BusinessUser,
+      City,
     ]),
   ],
   providers: [SeedService],

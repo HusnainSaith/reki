@@ -19,6 +19,7 @@ import { BusynessLevel } from '../../common/enums';
 import { PushService } from '../push/push.service';
 import { LiveGateway } from '../live/live.gateway';
 import { EmailService } from '../email/email.service';
+import { City } from '../cities/entities/city.entity';
 
 describe('BusinessService', () => {
   let service: BusinessService;
@@ -35,6 +36,7 @@ describe('BusinessService', () => {
   let jwtService: Record<string, jest.Mock>;
   let configService: Record<string, jest.Mock>;
   let emailService: Record<string, jest.Mock>;
+  let citiesRepo: Record<string, jest.Mock>;
 
   const mockBizUser = {
     id: 'biz-1',
@@ -84,6 +86,9 @@ describe('BusinessService', () => {
     emailService = {
       sendPasswordResetEmail: jest.fn(),
     };
+    citiesRepo = {
+      createQueryBuilder: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -98,6 +103,7 @@ describe('BusinessService', () => {
         { provide: getRepositoryToken(Notification), useValue: notificationsRepo },
         { provide: getRepositoryToken(User), useValue: usersRepo },
         { provide: getRepositoryToken(ActivityLog), useValue: activityLogsRepo },
+        { provide: getRepositoryToken(City), useValue: citiesRepo },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
         { provide: EmailService, useValue: emailService },
@@ -332,6 +338,12 @@ describe('BusinessService', () => {
     };
 
     beforeEach(() => {
+      const cityQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue({ id: 'city-london', name: 'London', slug: 'london' }),
+      };
+      citiesRepo.createQueryBuilder.mockReturnValue(cityQueryBuilder);
       activityLogsRepo.create.mockReturnValue({});
       activityLogsRepo.save.mockResolvedValue({});
     });
@@ -352,6 +364,23 @@ describe('BusinessService', () => {
       // verify images were passed to repository.create
       expect(venuesRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ images: ['https://example.com/image1.jpg'] }),
+      );
+    });
+
+    it('creates a venue in a supported city using its canonical name and id', async () => {
+      const londonDto = { ...createDto, city: ' london ' };
+      const savedVenue = { id: 'new-venue', ...londonDto, city: 'London', cityId: 'city-london', category: 'bar' };
+      venuesRepo.create.mockReturnValue(savedVenue);
+      venuesRepo.save.mockResolvedValue(savedVenue);
+      busynessRepo.create.mockReturnValue({});
+      busynessRepo.save.mockResolvedValue({});
+      vibesRepo.create.mockReturnValue({});
+      vibesRepo.save.mockResolvedValue({});
+
+      await service.createVenue('biz-1', londonDto as any);
+
+      expect(venuesRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ city: 'London', cityId: 'city-london' }),
       );
     });
 
