@@ -10,6 +10,7 @@ import { ActivityLog } from '../audit/entities/activity-log.entity';
 import { BusinessUser } from '../business/entities/business-user.entity';
 import { GeofenceLog } from '../geofence/entities/geofence-log.entity';
 import { Device } from '../devices/entities/device.entity';
+import { City } from '../cities/entities/city.entity';
 import { PushService } from '../push/push.service';
 import { LiveGateway } from '../live/live.gateway';
 import { SyncService } from '../sync/sync.service';
@@ -70,6 +71,7 @@ describe('AdminService', () => {
         { provide: getRepositoryToken(BusinessUser), useValue: businessUsersRepo },
         { provide: getRepositoryToken(GeofenceLog), useValue: geofenceLogsRepo },
         { provide: getRepositoryToken(Device), useValue: { count: jest.fn().mockResolvedValue(0) } },
+        { provide: getRepositoryToken(City), useValue: { find: jest.fn(), findOne: jest.fn(), create: jest.fn(), save: jest.fn() } },
         { provide: PushService, useValue: { getStats: jest.fn().mockReturnValue({ totalSent: 0, delivered: 0, failed: 0, opened: 0, openRate: '0%' }), isConfigured: jest.fn().mockReturnValue(false) } },
         { provide: LiveGateway, useValue: { getConnectionStats: jest.fn().mockReturnValue({ activeConnections: 0, uniqueUsers: 0, venueViewers: {} }) } },
         { provide: SyncService, useValue: { getOfflineStats: jest.fn().mockResolvedValue({ totalSyncActions: 0, pendingSyncActions: 0, successfulSyncs: 0, conflictsToday: 0, rejectedToday: 0, syncSuccessRate: '0.0%', avgSyncDelay: '0 minutes' }) } },

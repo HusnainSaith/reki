@@ -228,12 +228,19 @@ export class BusinessService {
 
   async createVenue(businessUserId: string, dto: any) {
     const submittedCity = typeof dto.city === 'string' ? dto.city.trim() : '';
-    const city = this.citiesRepository
-      ? await this.citiesRepository.createQueryBuilder('city')
-        .where('city.isActive = true')
-        .andWhere('(LOWER(city.slug) = LOWER(:city) OR LOWER(city.name) = LOWER(:city))', { city: submittedCity })
-        .getOne()
-      : null;
+    let city: City | null = null;
+    if (this.citiesRepository) {
+      if (dto.cityId) {
+        city = await this.citiesRepository.findOne({
+          where: { id: dto.cityId, isActive: true },
+        });
+      } else if (submittedCity) {
+        city = await this.citiesRepository.createQueryBuilder('city')
+          .where('city.isActive = true')
+          .andWhere('(LOWER(city.slug) = LOWER(:city) OR LOWER(city.name) = LOWER(:city))', { city: submittedCity })
+          .getOne();
+      }
+    }
     if (this.citiesRepository && !city) throw new BadRequestException('City is not currently supported');
     // Create the venue
     const venue = this.venuesRepository.create({

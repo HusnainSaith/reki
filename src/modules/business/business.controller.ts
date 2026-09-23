@@ -144,11 +144,12 @@ export class BusinessController {
   @ApiBody({
     schema: {
       type: 'object',
-      required: ['name', 'address', 'city', 'area', 'category', 'lat', 'lng', 'openingHours', 'closingTime'],
+      required: ['name', 'address', 'area', 'category', 'lat', 'lng', 'openingHours', 'closingTime'],
       properties: {
         name: { type: 'string', example: 'The Blue Moon Bar' },
         address: { type: 'string', example: '123 Oxford Road, Manchester' },
         city: { type: 'string', example: 'Manchester' },
+        cityId: { type: 'string', format: 'uuid', description: 'ID from GET /cities; may be used instead of city' },
         area: { type: 'string', example: 'City Centre' },
         category: { type: 'string', enum: Object.values(VenueCategory), example: 'bar' },
         lat: { type: 'number', example: 53.4808 },

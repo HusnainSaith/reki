@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional, IsArray, Min, Max } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsArray, IsUUID, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { VenueCategory } from '../../../common/enums';
@@ -14,10 +14,15 @@ export class CreateVenueDto {
   @IsString()
   address: string;
 
-  @ApiProperty({ example: 'Manchester' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'Manchester', description: 'Active city name or slug. Either city or cityId is required.' })
+  @IsOptional()
   @IsString()
-  city: string;
+  city?: string;
+
+  @ApiPropertyOptional({ format: 'uuid', description: 'ID returned by GET /cities. Either cityId or city is required.' })
+  @IsOptional()
+  @IsUUID()
+  cityId?: string;
 
   @ApiProperty({ example: 'City Centre' })
   @IsNotEmpty()

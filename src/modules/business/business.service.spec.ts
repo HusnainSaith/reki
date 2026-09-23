@@ -88,6 +88,7 @@ describe('BusinessService', () => {
     };
     citiesRepo = {
       createQueryBuilder: jest.fn(),
+      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -381,6 +382,32 @@ describe('BusinessService', () => {
 
       expect(venuesRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({ city: 'London', cityId: 'city-london' }),
+      );
+    });
+
+    it('creates a venue using an active city selected by id', async () => {
+      const cityIdDto = { ...createDto, city: undefined, cityId: '8bd196bb-00e9-4712-850d-a9e157c1d133' };
+      citiesRepo.findOne.mockResolvedValue({
+        id: cityIdDto.cityId,
+        name: 'Birmingham',
+        slug: 'birmingham',
+        isActive: true,
+      });
+      const savedVenue = { id: 'new-venue', ...cityIdDto, city: 'Birmingham', category: 'bar' };
+      venuesRepo.create.mockReturnValue(savedVenue);
+      venuesRepo.save.mockResolvedValue(savedVenue);
+      busynessRepo.create.mockReturnValue({});
+      busynessRepo.save.mockResolvedValue({});
+      vibesRepo.create.mockReturnValue({});
+      vibesRepo.save.mockResolvedValue({});
+
+      await service.createVenue('biz-1', cityIdDto as any);
+
+      expect(citiesRepo.findOne).toHaveBeenCalledWith({
+        where: { id: cityIdDto.cityId, isActive: true },
+      });
+      expect(venuesRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ city: 'Birmingham', cityId: cityIdDto.cityId }),
       );
     });
 
