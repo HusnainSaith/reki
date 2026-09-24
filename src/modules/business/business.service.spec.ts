@@ -131,6 +131,14 @@ describe('BusinessService', () => {
       expect(result.user.businessRole).toBe('staff');
       expect(result.user.venues[0].name).toBe("Albert's Schloss");
       expect(result.tokens.accessToken).toBe('biz-token');
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: mockBizUser.id,
+          role: 'business',
+          businessRole: BusinessRole.STAFF,
+        }),
+        expect.any(Object),
+      );
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {

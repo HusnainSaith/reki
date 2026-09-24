@@ -16,6 +16,27 @@ describe('WorkerService Phase 6', () => {
     service = new WorkerService(businessUsers as any, assignments as any, venues as any, busyness as any, liveUpdates as any, gateway as any);
   });
 
+  it('creates a worker with the staff role', async () => {
+    businessUsers.findOne
+      .mockResolvedValueOnce({ id: 'owner-1', role: BusinessRole.OWNER, isActive: true, isApproved: true })
+      .mockResolvedValueOnce(null);
+
+    const result = await service.createStaff('owner-1', {
+      email: 'STAFF@example.com',
+      name: 'Venue Staff',
+      password: 'StrongPass123',
+    });
+
+    expect(businessUsers.create).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'staff@example.com',
+      role: BusinessRole.STAFF,
+      accountOwnerId: 'owner-1',
+      isApproved: true,
+      isActive: true,
+    }));
+    expect(result).toMatchObject({ role: BusinessRole.STAFF, isActive: true });
+  });
+
   it('returns assigned venues for staff without incorrectly requiring staff ownership', async () => {
     businessUsers.findOne.mockResolvedValue({ id: 'staff-1', role: BusinessRole.STAFF, isActive: true, isApproved: true });
     assignments.find.mockResolvedValue([{ venue: { id: 'venue-1', businessUserId: 'owner-1' } }]);
