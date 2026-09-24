@@ -15,7 +15,7 @@ import { Vibe } from '../vibes/entities/vibe.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { User } from '../users/entities/user.entity';
 import { ActivityLog } from '../audit/entities/activity-log.entity';
-import { BusynessLevel } from '../../common/enums';
+import { BusinessRole, BusynessLevel } from '../../common/enums';
 import { PushService } from '../push/push.service';
 import { LiveGateway } from '../live/live.gateway';
 import { EmailService } from '../email/email.service';
@@ -43,6 +43,7 @@ describe('BusinessService', () => {
     email: 'manager@alberts.com',
     name: 'John Smith',
     password: '$2b$10$hashed',
+    role: BusinessRole.STAFF,
     isApproved: true,
     isActive: true,
     venues: [{ id: 'venue-1', name: "Albert's Schloss", address: '27 Peter Street' }],
@@ -126,7 +127,8 @@ describe('BusinessService', () => {
 
       const result = await service.login('manager@alberts.com', 'business123');
       expect(result.user.email).toBe('manager@alberts.com');
-      expect(result.user.role).toBe('business');
+      expect(result.user.role).toBe('staff');
+      expect(result.user.businessRole).toBe('staff');
       expect(result.user.venues[0].name).toBe("Albert's Schloss");
       expect(result.tokens.accessToken).toBe('biz-token');
     });

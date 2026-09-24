@@ -95,7 +95,8 @@ export class BusinessService {
         id: businessUser.id,
         email: businessUser.email,
         name: businessUser.name,
-        role: 'business',
+        role: businessUser.role,
+        businessRole: businessUser.role,
         venues: businessUser.venues?.map(v => ({
           id: v.id,
           name: v.name,
