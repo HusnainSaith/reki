@@ -114,7 +114,7 @@ export class VenuesService {
     const limit = filters?.limit || 20;
     qb.skip((page - 1) * limit).take(limit);
 
-    let venues = await qb.getMany();
+    const venues = await qb.getMany();
 
     // Compute isLive + active offer + distance + busyness color + social proof
     const userLat = filters?.userLat;

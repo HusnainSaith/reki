@@ -53,7 +53,7 @@ async function bootstrap() {
     ],
   });
 
-  const app = await NestFactory.create(AppModule, { logger: winstonLogger });
+  const app = await NestFactory.create(AppModule, { logger: winstonLogger, rawBody: true });
   const logger = new Logger('Bootstrap');
 
   // Security headers
@@ -100,6 +100,8 @@ async function bootstrap() {
     .addTag('Business', 'Business portal (dashboard, status, offers)')
     .addTag('Worker', 'Venue staff accounts, assignments, QR redemption, and live updates')
     .addTag('Cities', 'Supported cities and location auto-detection')
+    .addTag('Billing', 'Subscriptions, Stripe payments, portal, usage and verified webhooks')
+    .addTag('Intelligence', 'Recommendations, interaction events and crowd predictions')
     .addTag('Admin', 'Admin view-only APIs')
     .addTag('Devices', 'Device registration & notification preferences')
     .addTag('Live', 'Real-time updates (WebSocket + SSE fallback)')

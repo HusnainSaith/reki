@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
-import { appConfig, databaseConfig } from './config';
+import { appConfig, databaseConfig, billingConfig, intelligenceConfig } from './config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -32,6 +32,8 @@ import { UploadModule } from './modules/upload/upload.module';
 import { EngagementModule } from './modules/engagement/engagement.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { WorkerModule } from './modules/worker/worker.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { IntelligenceModule } from './modules/intelligence/intelligence.module';
 
 @Module({
   imports: [
@@ -41,7 +43,7 @@ import { WorkerModule } from './modules/worker/worker.module';
       // Local development keeps the environment file under src, while
       // deployments may provide one at the project root.
       envFilePath: ['.env', 'src/.env'],
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, billingConfig, intelligenceConfig],
     }),
 
     // Rate limiting: 100 requests per minute per IP
@@ -61,7 +63,9 @@ import { WorkerModule } from './modules/worker/worker.module';
         password: configService.get<string>('database.password'),
         database: configService.get<string>('database.database'),
         autoLoadEntities: true,
-        synchronize: configService.get<string>('app.nodeEnv') !== 'production',
+        // Schema changes are versioned migrations. Automatic synchronization can
+        // destructively rewrite shared enum types used by plan price history.
+        synchronize: false,
         logging: configService.get<string>('app.nodeEnv') === 'development',
       }),
       inject: [ConfigService],
@@ -94,6 +98,8 @@ import { WorkerModule } from './modules/worker/worker.module';
     EngagementModule,
     CitiesModule,
     WorkerModule,
+    BillingModule,
+    IntelligenceModule,
   ],
   controllers: [AppController],
   providers: [
